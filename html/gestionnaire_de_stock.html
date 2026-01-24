@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>StockPredict - Gestionnaire de stock</title>
+    
+    <!-- ==================== BOOTSTRAP PUR ==================== -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- ==================== CSS PERSONNALISÉ ==================== -->
+    <style>
+        /* ===== VARIABLES ===== */
+        :root {
+            --blue: #2563eb;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, var(--blue), var(--green));
+            --sidebar-width: 280px;
+            --sidebar-width-mobile: 100%;
+            --top-bar-height: 80px;
+        }
+
+        /* ===== STYLES GÉNÉRAUX ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+
+        /* ===== SIDEBAR FIXE AVEC RESPONSIVE ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Sidebar responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 85%;
+                max-width: 320px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            body.sidebar-open {
+                overflow: hidden;
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                backdrop-filter: blur(3px);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--gradient);
+            border-radius: 10px;
+        }
+
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 2px solid #f1f5f9;
+            background: linear-gradient(135deg, rgba(37,99,235,0.02), rgba(16,185,129,0.02));
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header {
+                padding: 20px 15px;
+            }
+        }
+
+        .sidebar-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .brand-blue {
+            color: var(--blue);
+        }
+
+        .brand-green {
+            color: var(--green);
+        }
+
+        .sidebar-header p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(37,99,235,0.1));
+            padding: 8px 15px;
+            border-radius: 50px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+            border: 1px solid rgba(16,185,129,0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-badge i {
+            color: var(--green);
+            margin-right: 8px;
+        }
+
+        .sidebar-menu {
+            padding: 20px 15px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-menu {
+                padding: 15px 10px;
+            }
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .nav-item {
+                padding: 10px 15px;
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+
+        .nav-item i {
+            font-size: 1.3rem;
+            width: 25px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(16,185,129,0.05), rgba(37,99,235,0.05));
+            color: var(--green);
+            transform: translateX(5px);
+        }
+
+        .nav-item:hover i {
+            color: var(--green);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            color: white;
+            box-shadow: 0 10px 20px rgba(16,185,129,0.3);
+        }
+
+        .nav-item.active i {
+            color: white;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            margin: 20px 0;
+        }
+
+        /* ===== TOP BAR RESPONSIVE ===== */
+        .top-bar {
+            margin-left: var(--sidebar-width);
+            padding: 20px 30px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            transition: margin-left 0.3s ease;
+            min-height: var(--top-bar-height);
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                margin-left: 0;
+                padding: 15px 20px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .top-bar {
+                margin-left: 240px;
+                padding: 15px 25px;
+            }
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1rem;
+            }
+        }
+
+        .page-title span {
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .page-title span {
+                display: none;
+            }
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .top-bar-actions {
+                gap: 10px;
+            }
+        }
+
+        .alert-badge {
+            background: var(--red);
+            color: white;
+            border-radius: 50px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+            .alert-badge span:not(.badge) {
+                display: none;
+            }
+            .alert-badge {
+                padding: 5px 8px;
+            }
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: #f1f5f9;
+        }
+
+        @media (max-width: 480px) {
+            .user-profile {
+                padding: 5px;
+            }
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        .user-info {
+            line-height: 1.3;
+        }
+
+        @media (max-width: 768px) {
+            .user-info {
+                display: none;
+            }
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* ===== CONTENU PRINCIPAL RESPONSIVE ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - var(--top-bar-height));
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px 15px;
+                width: 100%;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .main-content {
+                margin-left: 240px;
+                padding: 25px;
+                width: calc(100% - 240px);
+            }
+        }
+
+        /* ===== STATISTIQUES RESPONSIVES ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-card {
+                padding: 15px;
+            }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 480px) {
+            .stat-title {
+                font-size: 0.8rem;
+            }
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(37,99,235,0.1));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .stat-icon {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        .stat-icon i {
+            font-size: 1.8rem;
+            color: var(--green);
+        }
+
+        @media (max-width: 768px) {
+            .stat-icon i {
+                font-size: 1.5rem;
+            }
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-value {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* ===== ALERTES RESPONSIVES ===== */
+        .alert-card {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-left: 4px solid var(--red);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .alert-card {
+                padding: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .alert-card.warning {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left-color: var(--orange);
+        }
+
+        .alert-card.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border-left-color: var(--green);
+        }
+
+        @media (max-width: 768px) {
+            .alert-card .row {
+                width: 100%;
+            }
+            
+            .alert-card .col-md-6,
+            .alert-card .col-md-3 {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .alert-card .d-flex {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+
+        /* ===== TABLEAUX RESPONSIVES ===== */
+        .card {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: white;
+            border-bottom: 2px solid #f1f5f9;
+            padding: 20px 25px;
+            border-radius: 20px 20px 0 0 !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .card-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .card-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 15px;
+            }
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -15px;
+            padding: 0 15px;
+        }
+
+        .table {
+            margin-bottom: 0;
+            min-width: 600px;
+        }
+
+        @media (max-width: 768px) {
+            .table {
+                min-width: 500px;
+            }
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            padding: 15px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .table thead th,
+            .table tbody td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .badge-stock {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .badge-stock.critical {
+            background: #fee2e2;
+            color: var(--red);
+        }
+
+        .badge-stock.warning {
+            background: #fef3c7;
+            color: var(--orange);
+        }
+
+        .badge-stock.normal {
+            background: #d1fae5;
+            color: var(--green);
+        }
+
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+
+        @media (max-width: 768px) {
+            .action-btn {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        .action-btn:hover {
+            background: var(--green);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: var(--red);
+        }
+
+        /* ===== PROGRESS BAR RESPONSIVE ===== */
+        .stock-progress {
+            width: 100px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .stock-progress {
+                width: 60px;
+            }
+        }
+
+        .stock-progress-bar {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 10px;
+        }
+
+        /* ===== FORMULAIRES RESPONSIVES ===== */
+        .form-label {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .form-control, .form-select {
+                padding: 10px 12px;
+            }
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 4px rgba(16,185,129,0.1);
+            outline: none;
+        }
+
+        /* ===== BOUTONS RESPONSIVES ===== */
+        .btn-green, .btn-blue, .btn-outline-green {
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .btn-green, .btn-blue, .btn-outline-green {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-green, .btn-blue, .btn-outline-green {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        .btn-green {
+            background: var(--green);
+            color: white;
+            border: none;
+        }
+
+        .btn-green:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16,185,129,0.3);
+            color: white;
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: white;
+            border: none;
+        }
+
+        .btn-blue:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+            color: white;
+        }
+
+        .btn-outline-green {
+            border: 2px solid var(--green);
+            color: var(--green);
+            background: transparent;
+        }
+
+        .btn-outline-green:hover {
+            background: var(--green);
+            color: white;
+        }
+
+        /* ===== MODAL RESPONSIVE ===== */
+        .modal-dialog {
+            margin: 10px;
+            max-width: 500px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-dialog {
+                margin: 5px;
+            }
+            
+            .modal-content {
+                border-radius: 15px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px 25px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-header {
+                padding: 15px 20px;
+            }
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer button {
+                width: 100%;
+                margin: 0;
+            }
+        }
+
+        /* ===== OVERLAY POUR MENU MOBILE ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            backdrop-filter: blur(3px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ===== UTILITAIRES RESPONSIVES ===== */
+        .d-flex-responsive {
+            display: flex;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .d-flex-responsive {
+                flex-direction: column;
+            }
+        }
+
+        .w-100-mobile {
+            width: auto;
+        }
+
+        @media (max-width: 768px) {
+            .w-100-mobile {
+                width: 100%;
+            }
+        }
+
+        .text-center-mobile {
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .text-center-mobile {
+                text-align: center;
+            }
+        }
+
+        .gap-responsive {
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .gap-responsive {
+                gap: 15px;
+            }
+        }
+
+        /* Masquer éléments sur mobile */
+        @media (max-width: 768px) {
+            .hide-mobile {
+                display: none;
+            }
+        }
+
+        /* Afficher sur mobile */
+        @media (min-width: 769px) {
+            .show-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== OVERLAY POUR MENU MOBILE ==================== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ==================== SIDEBAR FIXE ==================== -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>
+            <span class="brand-blue">Stock</span><span class="brand-green">Predict</span>
+        </h2>
+        <p>Espace Gestionnaire</p>
+        <div class="user-badge">
+            <i class="bi bi-box-seam"></i>
+            Gestion de stock
+        </div>
+    </div>
+    
+    <div class="sidebar-menu">
+        <!-- Dashboard -->
+        <div class="nav-item active" data-page="dashboard">
+            <i class="bi bi-speedometer2"></i>
+            <span>Tableau de bord</span>
+        </div>
+        
+        <!-- Produits -->
+        <div class="nav-item" data-page="produits">
+            <i class="bi bi-box"></i>
+            <span>Gestion des produits</span>
+        </div>
+        
+        <!-- Entrées stock -->
+        <div class="nav-item" data-page="entrees">
+            <i class="bi bi-arrow-down-circle"></i>
+            <span>Entrées de stock</span>
+        </div>
+        
+        <!-- Sorties stock -->
+        <div class="nav-item" data-page="sorties">
+            <i class="bi bi-arrow-up-circle"></i>
+            <span>Sorties de stock</span>
+        </div>
+        
+        <!-- Niveaux de stock -->
+        <div class="nav-item" data-page="niveaux">
+            <i class="bi bi-bar-chart"></i>
+            <span>Niveaux de stock</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Alertes -->
+        <div class="nav-item" data-page="alertes">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>Alertes rupture</span>
+            <span class="badge bg-danger ms-auto">3</span>
+        </div>
+        
+        <!-- Suggestions prédictives -->
+        <div class="nav-item" data-page="suggestions">
+            <i class="bi bi-cpu"></i>
+            <span>Suggestions IA</span>
+            <span class="badge bg-success ms-auto">5</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Historique -->
+        <div class="nav-item" data-page="historique">
+            <i class="bi bi-clock-history"></i>
+            <span>Historique</span>
+        </div>
+        
+        <!-- Déconnexion -->
+        <div class="nav-item" data-page="logout">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Déconnexion</span>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TOP BAR ==================== -->
+<div class="top-bar">
+    <div class="page-title">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <span id="pageTitle">Tableau de bord</span>
+        <span>Gestionnaire</span>
+    </div>
+    
+    <div class="top-bar-actions">
+        <!-- Alertes rapides -->
+        <div class="alert-badge">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>3 alertes</span>
+            <span class="badge bg-light text-dark hide-mobile">urgentes</span>
+        </div>
+        
+        <!-- Profil -->
+        <div class="user-profile">
+            <div class="user-avatar">
+                GS
+            </div>
+            <div class="user-info">
+                <div class="user-name">Gestionnaire Stock</div>
+                <div class="user-role">Suivi quotidien</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CONTENU PRINCIPAL ==================== -->
+<div class="main-content" id="mainContent">
+    <!-- Le contenu sera chargé dynamiquement -->
+</div>
+
+<!-- ==================== MODAL AJOUTER PRODUIT ==================== -->
+<div class="modal fade" id="produitModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-box me-2"></i>
+                    Ajouter un produit
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addProduitForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nom du produit</label>
+                        <input type="text" class="form-control" placeholder="Ex: Ordinateur portable" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Catégorie</label>
+                        <select class="form-select" required>
+                            <option value="">Sélectionner</option>
+                            <option>Informatique</option>
+                            <option>Bureautique</option>
+                            <option>Mobilier</option>
+                            <option>Consommables</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Prix d'achat</label>
+                            <input type="number" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Prix de vente</label>
+                            <input type="number" class="form-control" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Quantité initiale</label>
+                            <input type="number" class="form-control" value="0" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Seuil d'alerte</label>
+                            <input type="number" class="form-control" value="10" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Fournisseur</label>
+                        <input type="text" class="form-control" placeholder="Nom du fournisseur">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Code barre / SKU</label>
+                        <input type="text" class="form-control" placeholder="SKU123456">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-green w-100-mobile" onclick="ajouterProduit()">
+                    <i class="bi bi-check-lg me-2"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL MOUVEMENT STOCK ==================== -->
+<div class="modal fade" id="mouvementModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" id="mouvementModalHeader">
+                <h5 class="modal-title" id="mouvementModalTitle">
+                    <i class="bi bi-arrow-down-circle me-2"></i>
+                    Entrée de stock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="mouvementForm">
+                    <div class="mb-3">
+                        <label class="form-label">Produit</label>
+                        <select class="form-select" id="mouvementProduit" required>
+                            <option value="">Sélectionner un produit</option>
+                            <option value="1">Ordinateur portable HP</option>
+                            <option value="2">Écran 24 pouces</option>
+                            <option value="3">Clavier sans fil</option>
+                            <option value="4">Souris optique</option>
+                            <option value="5">Chaise de bureau</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Quantité</label>
+                        <input type="number" class="form-control" id="mouvementQuantite" min="1" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" id="mouvementDate" value="" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Motif</label>
+                        <select class="form-select" id="mouvementMotif" required>
+                            <option value="">Sélectionner</option>
+                            <option value="livraison">Livraison fournisseur</option>
+                            <option value="retour">Retour client</option>
+                            <option value="inventaire">Ajustement inventaire</option>
+                            <option value="vente">Vente</option>
+                            <option value="transfert">Transfert</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" rows="2" placeholder="Informations complémentaires..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-green w-100-mobile" onclick="enregistrerMouvement()">
+                    <i class="bi bi-check-lg me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== BOOTSTRAP JS ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ==================== JAVASCRIPT PUR ==================== -->
+<script>
+    // ================================================
+    // DONNÉES DE DÉMONSTRATION - PRODUITS
+    // ================================================
+    let produits = [
+        { 
+            id: 1, 
+            nom: 'Ordinateur portable HP', 
+            categorie: 'Informatique',
+            prixAchat: 450,
+            prixVente: 650,
+            quantite: 15,
+            seuil: 10,
+            fournisseur: 'HP France',
+            sku: 'HP-ELITE-001',
+            status: 'normal'
+        },
+        { 
+            id: 2, 
+            nom: 'Écran 24 pouces', 
+            categorie: 'Informatique',
+            prixAchat: 120,
+            prixVente: 180,
+            quantite: 8,
+            seuil: 10,
+            fournisseur: 'Dell',
+            sku: 'DELL-24-002',
+            status: 'warning'
+        },
+        { 
+            id: 3, 
+            nom: 'Clavier sans fil', 
+            categorie: 'Périphériques',
+            prixAchat: 25,
+            prixVente: 45,
+            quantite: 3,
+            seuil: 10,
+            fournisseur: 'Logitech',
+            sku: 'LOG-KB-003',
+            status: 'critical'
+        },
+        { 
+            id: 4, 
+            nom: 'Souris optique', 
+            categorie: 'Périphériques',
+            prixAchat: 15,
+            prixVente: 29,
+            quantite: 25,
+            seuil: 15,
+            fournisseur: 'Logitech',
+            sku: 'LOG-MS-004',
+            status: 'normal'
+        },
+        { 
+            id: 5, 
+            nom: 'Chaise de bureau', 
+            categorie: 'Mobilier',
+            prixAchat: 120,
+            prixVente: 199,
+            quantite: 5,
+            seuil: 5,
+            fournisseur: 'IKEA',
+            sku: 'CHAIR-005',
+            status: 'critical'
+        },
+        { 
+            id: 6, 
+            nom: 'Casque audio', 
+            categorie: 'Audio',
+            prixAchat: 30,
+            prixVente: 59,
+            quantite: 12,
+            seuil: 8,
+            fournisseur: 'Sony',
+            sku: 'SONY-HP-006',
+            status: 'normal'
+        }
+    ];
+
+    // ================================================
+    // DONNÉES DE DÉMONSTRATION - MOUVEMENTS
+    // ================================================
+    let mouvements = [
+        { id: 1, date: '2024-02-24', type: 'entree', produit: 'Ordinateur portable HP', quantite: 5, motif: 'Livraison fournisseur' },
+        { id: 2, date: '2024-02-24', type: 'sortie', produit: 'Souris optique', quantite: 3, motif: 'Vente' },
+        { id: 3, date: '2024-02-23', type: 'entree', produit: 'Clavier sans fil', quantite: 10, motif: 'Livraison' },
+        { id: 4, date: '2024-02-23', type: 'sortie', produit: 'Écran 24 pouces', quantite: 2, motif: 'Vente' },
+        { id: 5, date: '2024-02-22', type: 'sortie', produit: 'Chaise de bureau', quantite: 1, motif: 'Vente' }
+    ];
+
+    // ================================================
+    // GESTION DU MENU MOBILE
+    // ================================================
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const body = document.body;
+
+    function toggleMenu() {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+        body.classList.toggle('sidebar-open');
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+
+    // Fermer le menu quand on clique sur un lien
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleMenu();
+            }
+        });
+    });
+
+    // ================================================
+    // FONCTION DE CHARGEMENT DU CONTENU
+    // ================================================
+    function loadContent(page) {
+        const mainContent = document.getElementById('mainContent');
+        const pageTitle = document.getElementById('pageTitle');
+        let content = '';
+
+        // Afficher le loading
+        mainContent.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        `;
+
+        // Simuler un chargement
+        setTimeout(() => {
+            switch(page) {
+                case 'dashboard':
+                    pageTitle.textContent = 'Tableau de bord';
+                    content = getDashboardContent();
+                    break;
+                case 'produits':
+                    pageTitle.textContent = 'Gestion des produits';
+                    content = getProduitsContent();
+                    break;
+                case 'entrees':
+                    pageTitle.textContent = 'Entrées de stock';
+                    content = getEntreesContent();
+                    break;
+                case 'sorties':
+                    pageTitle.textContent = 'Sorties de stock';
+                    content = getSortiesContent();
+                    break;
+                case 'niveaux':
+                    pageTitle.textContent = 'Niveaux de stock';
+                    content = getNiveauxContent();
+                    break;
+                case 'alertes':
+                    pageTitle.textContent = 'Alertes rupture';
+                    content = getAlertesContent();
+                    break;
+                case 'suggestions':
+                    pageTitle.textContent = 'Suggestions prédictives';
+                    content = getSuggestionsContent();
+                    break;
+                case 'historique':
+                    pageTitle.textContent = 'Historique';
+                    content = getHistoriqueContent();
+                    break;
+                default:
+                    content = '<div class="alert alert-info">Page en construction</div>';
+            }
+            
+            mainContent.innerHTML = content;
+            
+            // Initialiser les événements
+            initPageEvents();
+        }, 300);
+    }
+
+    // ================================================
+    // CONTENU DU DASHBOARD
+    // ================================================
+    function getDashboardContent() {
+        const totalProduits = produits.length;
+        const stockTotal = produits.reduce((acc, p) => acc + p.quantite, 0);
+        const alertesCritiques = produits.filter(p => p.quantite <= p.seuil).length;
+        const valeurStock = produits.reduce((acc, p) => acc + (p.quantite * p.prixAchat), 0);
+
+        const alertesHTML = produits
+            .filter(p => p.quantite <= p.seuil)
+            .map(p => {
+                const type = p.quantite === 0 ? 'critical' : (p.quantite <= p.seuil/2 ? 'critical' : 'warning');
+                const message = p.quantite === 0 ? 'RUPTURE TOTALE' : `Stock critique (${p.quantite}/${p.seuil})`;
+                
+                return `
+                    <div class="alert-card ${type === 'critical' ? '' : 'warning'}">
+                        <div>
+                            <strong>${p.nom}</strong>
+                            <p class="small mb-0">${message}</p>
+                        </div>
+                        <button class="btn btn-sm btn-${type === 'critical' ? 'danger' : 'warning'}" onclick="reapprovisionner(${p.id})">
+                            Réapprovisionner
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+        return `
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Produits</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-box"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${totalProduits}</div>
+                    <small class="text-muted">Total articles</small>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Stock total</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-boxes"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${stockTotal}</div>
+                    <small class="text-muted">Unités en stock</small>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Alertes</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value text-danger">${alertesCritiques}</div>
+                    <small class="text-muted">Produits sous seuil</small>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Valeur stock</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${valeurStock}€</div>
+                    <small class="text-muted">Prix d'achat</small>
+                </div>
+            </div>
+            
+            ${alertesCritiques > 0 ? `
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Alertes urgentes</h5>
+                        <span class="badge bg-danger">${alertesCritiques} actions requises</span>
+                    </div>
+                    <div class="card-body">
+                        ${alertesHTML}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Derniers mouvements</h5>
+                    <button class="btn btn-outline-green btn-sm" onclick="document.querySelector('[data-page=\\'historique\\']').click()">
+                        Voir tout
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Produit</th>
+                                    <th>Quantité</th>
+                                    <th>Motif</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${mouvements.slice(0, 5).map(m => `
+                                    <tr>
+                                        <td>${m.date}</td>
+                                        <td>
+                                            ${m.type === 'entree' 
+                                                ? '<span class="badge bg-success">Entrée</span>' 
+                                                : '<span class="badge bg-danger">Sortie</span>'}
+                                        </td>
+                                        <td>${m.produit}</td>
+                                        <td><strong>${m.quantite}</strong></td>
+                                        <td>${m.motif}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Suggestions IA</h5>
+                    <span class="badge bg-success">Nouveau</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="alert-card success">
+                                <div>
+                                    <strong>📊 Réapprovisionnement recommandé</strong>
+                                    <p class="small mb-0">Clavier sans fil - Commander 15 unités</p>
+                                </div>
+                                <button class="btn btn-sm btn-green">Voir</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert-card success">
+                                <div>
+                                    <strong>📈 Produit tendance</strong>
+                                    <p class="small mb-0">Ordinateurs portables - +25% ventes</p>
+                                </div>
+                                <button class="btn btn-sm btn-green">Voir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU GESTION DES PRODUITS
+    // ================================================
+    function getProduitsContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Liste des produits</h5>
+                    <button class="btn btn-green btn-sm" data-bs-toggle="modal" data-bs-target="#produitModal">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Ajouter
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Catégorie</th>
+                                    <th>Prix</th>
+                                    <th>Stock</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${produits.map(p => {
+                                    const statusClass = p.quantite <= 0 ? 'critical' : (p.quantite <= p.seuil ? 'warning' : 'normal');
+                                    const statusText = p.quantite <= 0 ? 'Rupture' : (p.quantite <= p.seuil ? 'Critique' : 'Normal');
+                                    
+                                    return `
+                                        <tr>
+                                            <td>
+                                                <strong>${p.nom}</strong>
+                                                <br><small class="text-muted">${p.sku}</small>
+                                            </td>
+                                            <td>${p.categorie}</td>
+                                            <td>${p.prixVente} €</td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="fw-bold">${p.quantite}</span>
+                                                    <div class="stock-progress">
+                                                        <div class="stock-progress-bar" style="width: ${Math.min(100, (p.quantite / p.seuil) * 100)}%"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><span class="badge-stock ${statusClass}">${statusText}</span></td>
+                                            <td>
+                                                <span class="action-btn" onclick="modifierProduit(${p.id})">
+                                                    <i class="bi bi-pencil"></i>
+                                                </span>
+                                                <span class="action-btn delete" onclick="supprimerProduit(${p.id})">
+                                                    <i class="bi bi-trash"></i>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU ENTRÉES DE STOCK
+    // ================================================
+    function getEntreesContent() {
+        const entrees = mouvements.filter(m => m.type === 'entree');
+        
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Enregistrer une entrée</h5>
+                    <button class="btn btn-green btn-sm" onclick="ouvrirModalEntree()">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Nouvelle entrée
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Historique des entrées</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Produit</th>
+                                    <th>Quantité</th>
+                                    <th>Motif</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${entrees.map(e => `
+                                    <tr>
+                                        <td>${e.date}</td>
+                                        <td><strong>${e.produit}</strong></td>
+                                        <td><span class="badge bg-success">+${e.quantite}</span></td>
+                                        <td>${e.motif}</td>
+                                        <td>
+                                            <span class="action-btn" onclick="voirDetails(${e.id})">
+                                                <i class="bi bi-eye"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU SORTIES DE STOCK
+    // ================================================
+    function getSortiesContent() {
+        const sorties = mouvements.filter(m => m.type === 'sortie');
+        
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Enregistrer une sortie</h5>
+                    <button class="btn btn-orange btn-sm" onclick="ouvrirModalSortie()" style="background: var(--orange); color: white;">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Nouvelle sortie
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Historique des sorties</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Produit</th>
+                                    <th>Quantité</th>
+                                    <th>Motif</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sorties.map(s => `
+                                    <tr>
+                                        <td>${s.date}</td>
+                                        <td><strong>${s.produit}</strong></td>
+                                        <td><span class="badge bg-danger">-${s.quantite}</span></td>
+                                        <td>${s.motif}</td>
+                                        <td>
+                                            <span class="action-btn" onclick="voirDetails(${s.id})">
+                                                <i class="bi bi-eye"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU NIVEAUX DE STOCK
+    // ================================================
+    function getNiveauxContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-8 mb-4 mb-lg-0">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Niveaux de stock détaillés</h5>
+                            <select class="form-select form-select-sm w-auto">
+                                <option>Tous les produits</option>
+                                <option>Stock critique</option>
+                                <option>Stock normal</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produit</th>
+                                            <th>Stock actuel</th>
+                                            <th>Seuil</th>
+                                            <th>Statut</th>
+                                            <th>Tendance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${produits.map(p => {
+                                            const statusClass = p.quantite <= 0 ? 'critical' : (p.quantite <= p.seuil ? 'warning' : 'normal');
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>${p.nom}</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            <span class="fw-bold">${p.quantite}</span>
+                                                            <div class="stock-progress">
+                                                                <div class="stock-progress-bar" style="width: ${Math.min(100, (p.quantite / p.seuil) * 100)}%"></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>${p.seuil}</td>
+                                                    <td><span class="badge-stock ${statusClass}">${p.quantite <= 0 ? 'Rupture' : (p.quantite <= p.seuil ? 'Critique' : 'Normal')}</span></td>
+                                                    <td>
+                                                        <i class="bi bi-graph-up-arrow text-success"></i>
+                                                        <small class="text-muted">+12%</small>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Résumé</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Produits en rupture</h6>
+                                <h2 class="text-danger">${produits.filter(p => p.quantite === 0).length}</h2>
+                            </div>
+                            <div class="mb-4">
+                                <h6>Produits critiques</h6>
+                                <h2 class="text-warning">${produits.filter(p => p.quantite > 0 && p.quantite <= p.seuil).length}</h2>
+                            </div>
+                            <div>
+                                <h6>Produits normaux</h6>
+                                <h2 class="text-success">${produits.filter(p => p.quantite > p.seuil).length}</h2>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6>Actions rapides</h6>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-green" onclick="exporterRapport()">
+                                    <i class="bi bi-download me-2"></i>Exporter l'inventaire
+                                </button>
+                                <button class="btn btn-outline-blue" onclick="lancerInventaire()">
+                                    <i class="bi bi-clipboard-check me-2"></i>Lancer inventaire
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU ALERTES RUPTURE
+    // ================================================
+    function getAlertesContent() {
+        const produitsCritiques = produits.filter(p => p.quantite <= p.seuil);
+        
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Alertes de rupture</h5>
+                    <span class="badge bg-danger">${produitsCritiques.length} alertes</span>
+                </div>
+                <div class="card-body">
+                    ${produitsCritiques.length === 0 ? `
+                        <div class="text-center py-5">
+                            <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                            <h5 class="mt-3">Aucune alerte</h5>
+                            <p class="text-muted">Tous les stocks sont à des niveaux normaux</p>
+                        </div>
+                    ` : produitsCritiques.map(p => {
+                        const niveau = p.quantite === 0 ? 'Rupture totale' : 'Stock critique';
+                        const classe = p.quantite === 0 ? 'danger' : 'warning';
+                        
+                        return `
+                            <div class="alert-card ${classe === 'danger' ? '' : 'warning'} mb-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6 mb-2 mb-md-0">
+                                        <h5>${p.nom}</h5>
+                                        <p class="small mb-0">SKU: ${p.sku} | Fournisseur: ${p.fournisseur}</p>
+                                    </div>
+                                    <div class="col-md-3 mb-2 mb-md-0">
+                                        <div class="text-center text-md-start">
+                                            <span class="badge bg-${classe} p-2">${niveau}</span>
+                                            <p class="small mt-2">Stock: ${p.quantite} / Seuil: ${p.seuil}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="d-flex gap-2 justify-content-md-end">
+                                            <button class="btn btn-${classe} btn-sm" onclick="reapprovisionner(${p.id})">
+                                                <i class="bi bi-truck me-2"></i>Réappro
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="ignorerAlerte(${p.id})">
+                                                <i class="bi bi-bell-slash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Historique des alertes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Produit</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>24/02/2024</td>
+                                    <td>Clavier sans fil</td>
+                                    <td><span class="badge bg-warning">Stock critique</span></td>
+                                    <td><span class="badge bg-success">Résolue</span></td>
+                                    <td><button class="btn btn-sm btn-outline-green">Voir</button></td>
+                                </tr>
+                                <tr>
+                                    <td>23/02/2024</td>
+                                    <td>Chaise de bureau</td>
+                                    <td><span class="badge bg-danger">Rupture</span></td>
+                                    <td><span class="badge bg-warning">En cours</span></td>
+                                    <td><button class="btn btn-sm btn-outline-green">Voir</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU SUGGESTIONS PRÉDICTIVES
+    // ================================================
+    function getSuggestionsContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title">Réapprovisionnement recommandé</h5>
+                            <i class="bi bi-cpu fs-4" style="color: var(--blue);"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                                        <div>
+                                            <strong>Clavier sans fil</strong>
+                                            <p class="small text-muted mb-0">Stock: 3 | Seuil: 10</p>
+                                        </div>
+                                        <div class="d-flex gap-2 w-100 w-sm-auto">
+                                            <span class="badge bg-success">+15 recommandés</span>
+                                            <button class="btn btn-sm btn-green">Commander</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                                        <div>
+                                            <strong>Chaise de bureau</strong>
+                                            <p class="small text-muted mb-0">Stock: 5 | Seuil: 5</p>
+                                        </div>
+                                        <div class="d-flex gap-2 w-100 w-sm-auto">
+                                            <span class="badge bg-warning">+10 recommandés</span>
+                                            <button class="btn btn-sm btn-green">Commander</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                                        <div>
+                                            <strong>Écran 24 pouces</strong>
+                                            <p class="small text-muted mb-0">Stock: 8 | Seuil: 10</p>
+                                        </div>
+                                        <div class="d-flex gap-2 w-100 w-sm-auto">
+                                            <span class="badge bg-success">+8 recommandés</span>
+                                            <button class="btn btn-sm btn-green">Commander</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title">Prévisions de vente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Ordinateurs portables</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tendance</span>
+                                    <span class="text-success"><i class="bi bi-arrow-up"></i> +25%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: 75%">75%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6>Périphériques</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tendance</span>
+                                    <span class="text-success"><i class="bi bi-arrow-up"></i> +12%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" style="width: 62%">62%</div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h6>Mobilier</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tendance</span>
+                                    <span class="text-danger"><i class="bi bi-arrow-down"></i> -5%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" style="width: 45%">45%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Produits saisonniers</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert bg-light">
+                                <strong>📅 Pic saisonnier détecté</strong>
+                                <p class="small mb-0 mt-2">Les ventes de casques audio augmentent de 40% en cette période. Prévoyez un réapprovisionnement.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU HISTORIQUE
+    // ================================================
+    function getHistoriqueContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Historique complet</h5>
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <select class="form-select form-select-sm">
+                            <option>Tous les types</option>
+                            <option>Entrées</option>
+                            <option>Sorties</option>
+                        </select>
+                        <input type="date" class="form-control form-control-sm" value="2024-02-24">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Produit</th>
+                                    <th>Quantité</th>
+                                    <th>Motif</th>
+                                    <th>Utilisateur</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${mouvements.map(m => `
+                                    <tr>
+                                        <td>${m.date}</td>
+                                        <td>
+                                            ${m.type === 'entree' 
+                                                ? '<span class="badge bg-success">Entrée</span>' 
+                                                : '<span class="badge bg-danger">Sortie</span>'}
+                                        </td>
+                                        <td>${m.produit}</td>
+                                        <td><strong>${m.quantite}</strong></td>
+                                        <td>${m.motif}</td>
+                                        <td>Gestionnaire</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // FONCTIONS UTILITAIRES
+    // ================================================
+    function modifierProduit(id) {
+        alert(`Modification du produit ${id}`);
+    }
+
+    function supprimerProduit(id) {
+        if(confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+            produits = produits.filter(p => p.id !== id);
+            loadContent('produits');
+            alert('Produit supprimé avec succès');
+        }
+    }
+
+    function ajouterProduit() {
+        alert('Produit ajouté avec succès !');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('produitModal'));
+        modal.hide();
+        document.getElementById('addProduitForm').reset();
+    }
+
+    function ouvrirModalEntree() {
+        document.getElementById('mouvementModalHeader').style.background = 'linear-gradient(135deg, var(--green), var(--blue))';
+        document.getElementById('mouvementModalTitle').innerHTML = '<i class="bi bi-arrow-down-circle me-2"></i>Entrée de stock';
+        const modal = new bootstrap.Modal(document.getElementById('mouvementModal'));
+        modal.show();
+        
+        // Set today's date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('mouvementDate').value = today;
+    }
+
+    function ouvrirModalSortie() {
+        document.getElementById('mouvementModalHeader').style.background = 'linear-gradient(135deg, #ef4444, #f97316)';
+        document.getElementById('mouvementModalTitle').innerHTML = '<i class="bi bi-arrow-up-circle me-2"></i>Sortie de stock';
+        const modal = new bootstrap.Modal(document.getElementById('mouvementModal'));
+        modal.show();
+        
+        // Set today's date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('mouvementDate').value = today;
+    }
+
+    function enregistrerMouvement() {
+        const produit = document.getElementById('mouvementProduit').value;
+        const quantite = document.getElementById('mouvementQuantite').value;
+        const date = document.getElementById('mouvementDate').value;
+        const motif = document.getElementById('mouvementMotif').value;
+        
+        if(!produit || !quantite || !motif) {
+            alert('Veuillez remplir tous les champs obligatoires');
+            return;
+        }
+        
+        const type = document.getElementById('mouvementModalTitle').innerText.includes('Entrée') ? 'entree' : 'sortie';
+        const nomProduit = document.querySelector(`#mouvementProduit option[value="${produit}"]`).text;
+        
+        mouvements.unshift({
+            id: mouvements.length + 1,
+            date: date,
+            type: type,
+            produit: nomProduit,
+            quantite: parseInt(quantite),
+            motif: motif
+        });
+        
+        alert('Mouvement enregistré avec succès !');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('mouvementModal'));
+        modal.hide();
+        document.getElementById('mouvementForm').reset();
+    }
+
+    function reapprovisionner(id) {
+        alert(`Demande de réapprovisionnement pour le produit ${id}`);
+    }
+
+    function ignorerAlerte(id) {
+        if(confirm('Ignorer cette alerte ?')) {
+            alert(`Alerte ${id} ignorée`);
+        }
+    }
+
+    function voirDetails(id) {
+        alert(`Détails du mouvement ${id}`);
+    }
+
+    function exporterRapport() {
+        alert('Rapport exporté avec succès');
+    }
+
+    function lancerInventaire() {
+        alert('Inventaire lancé');
+    }
+
+    // ================================================
+    // INITIALISATION DE LA NAVIGATION
+    // ================================================
+    function initNavigation() {
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const page = this.getAttribute('data-page');
+                
+                if(page === 'logout') {
+                    if(confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                        window.location.href = 'index.html';
+                    }
+                    return;
+                }
+                
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                loadContent(page);
+            });
+        });
+    }
+
+    function initPageEvents() {
+        // Initialisation des tooltips si nécessaire
+    }
+
+    // ================================================
+    // CHARGEMENT INITIAL
+    // ================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        initNavigation();
+        loadContent('dashboard');
+        
+        // Gestion du redimensionnement
+        window.addEventListener('resize', function() {
+            if(window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                body.classList.remove('sidebar-open');
+            }
+        });
+        
+        console.log('%c📦 Espace Gestionnaire de stock - Version Responsive', 'color: #10b981; font-size: 14px; font-weight: bold;');
+    });
+</script>
+
+</body>
+</html>

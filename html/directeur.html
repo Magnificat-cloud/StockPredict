@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>StockPredict - Direction / Manager</title>
+    
+    <!-- ==================== BOOTSTRAP PUR ==================== -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- ==================== CHART.JS POUR GRAPHIQUES ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- ==================== CSS PERSONNALISÉ ==================== -->
+    <style>
+        /* ===== VARIABLES (MÊMES COULEURS) ===== */
+        :root {
+            --blue: #2563eb;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --purple: #8b5cf6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, var(--blue), var(--green));
+            --gradient-blue: linear-gradient(135deg, #2563eb, #1e40af);
+            --gradient-green: linear-gradient(135deg, #10b981, #059669);
+            --sidebar-width: 280px;
+            --sidebar-width-mobile: 85%;
+            --top-bar-height: 80px;
+        }
+
+        /* ===== STYLES GÉNÉRAUX ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+
+        /* ===== SIDEBAR FIXE AVEC RESPONSIVE ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Sidebar responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width-mobile);
+                max-width: 320px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            body.sidebar-open {
+                overflow: hidden;
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                backdrop-filter: blur(3px);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--gradient);
+            border-radius: 10px;
+        }
+
+        /* En-tête sidebar */
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 2px solid #f1f5f9;
+            background: linear-gradient(135deg, rgba(37,99,235,0.02), rgba(16,185,129,0.02));
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header {
+                padding: 20px 15px;
+            }
+        }
+
+        .sidebar-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .brand-blue {
+            color: var(--blue);
+        }
+
+        .brand-green {
+            color: var(--green);
+        }
+
+        .sidebar-header p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.1));
+            padding: 8px 15px;
+            border-radius: 50px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+            border: 1px solid rgba(37,99,235,0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-badge i {
+            color: var(--blue);
+            margin-right: 8px;
+        }
+
+        /* Menu de navigation */
+        .sidebar-menu {
+            padding: 20px 15px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .nav-item {
+                padding: 10px 15px;
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+
+        .nav-item i {
+            font-size: 1.3rem;
+            width: 25px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(16,185,129,0.05));
+            color: var(--blue);
+            transform: translateX(5px);
+        }
+
+        .nav-item:hover i {
+            color: var(--blue);
+        }
+
+        .nav-item.active {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+        }
+
+        .nav-item.active i {
+            color: white;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            margin: 20px 0;
+        }
+
+        /* ===== TOP BAR RESPONSIVE ===== */
+        .top-bar {
+            margin-left: var(--sidebar-width);
+            padding: 20px 30px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            transition: margin-left 0.3s ease;
+            min-height: var(--top-bar-height);
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                margin-left: 0;
+                padding: 15px 20px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .top-bar {
+                margin-left: 240px;
+                padding: 15px 25px;
+            }
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        .page-title span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .page-title span {
+                display: none;
+            }
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .top-bar-actions {
+                gap: 12px;
+            }
+        }
+
+        .date-range {
+            background: #f1f5f9;
+            border-radius: 50px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .date-range {
+                display: none;
+            }
+        }
+
+        .date-range i {
+            color: var(--blue);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: #f1f5f9;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        .user-info {
+            line-height: 1.3;
+        }
+
+        @media (max-width: 768px) {
+            .user-info {
+                display: none;
+            }
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* ===== CONTENU PRINCIPAL RESPONSIVE ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - var(--top-bar-height));
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px 15px;
+                width: 100%;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .main-content {
+                margin-left: 240px;
+                padding: 25px;
+                width: calc(100% - 240px);
+            }
+        }
+
+        /* ===== CARTES STATISTIQUES RESPONSIVES ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                padding: 20px;
+            }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.1));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon i {
+            font-size: 1.8rem;
+            color: var(--blue);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-value {
+                font-size: 1.8rem;
+            }
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--green);
+        }
+
+        .stat-change.negative {
+            color: var(--red);
+        }
+
+        /* ===== GRAPHIQUES ===== */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* ===== TABLEAUX ===== */
+        .card {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: white;
+            border-bottom: 2px solid #f1f5f9;
+            padding: 20px 25px;
+            border-radius: 20px 20px 0 0 !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .card-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 20px;
+            }
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -15px;
+            padding: 0 15px;
+        }
+
+        .table {
+            margin-bottom: 0;
+            min-width: 600px;
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            padding: 15px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        .trend-up {
+            color: var(--green);
+        }
+
+        .trend-down {
+            color: var(--red);
+        }
+
+        .badge-rentabilite {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .badge-rentabilite.elevee {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-rentabilite.moyenne {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-rentabilite.faible {
+            background: #fee2e2;
+            color: var(--red);
+        }
+
+        /* ===== BOUTONS ===== */
+        .btn-primary-custom {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+            color: white;
+        }
+
+        .btn-outline-custom {
+            border: 2px solid var(--blue);
+            color: var(--blue);
+            background: transparent;
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-outline-custom:hover {
+            background: var(--gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .btn-primary-custom, .btn-outline-custom {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+        }
+
+        .progress-bar {
+            background: var(--gradient);
+            border-radius: 10px;
+        }
+
+        /* ===== KPI CARDS ===== */
+        .kpi-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .kpi-title {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .kpi-sub {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* ===== OVERLAY ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            backdrop-filter: blur(3px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ===== LOADING ===== */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f1f5f9;
+            border-top: 5px solid var(--blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== OVERLAY POUR MENU MOBILE ==================== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ==================== SIDEBAR FIXE ==================== -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>
+            <span class="brand-blue">Stock</span><span class="brand-green">Predict</span>
+        </h2>
+        <p>Espace Direction</p>
+        <div class="user-badge">
+            <i class="bi bi-graph-up"></i>
+            Décisions Stratégiques
+        </div>
+    </div>
+    
+    <div class="sidebar-menu">
+        <!-- Dashboard -->
+        <div class="nav-item active" data-page="dashboard">
+            <i class="bi bi-speedometer2"></i>
+            <span>Tableau de bord global</span>
+        </div>
+        
+        <!-- Analyse ventes -->
+        <div class="nav-item" data-page="ventes">
+            <i class="bi bi-bar-chart"></i>
+            <span>Analyse des ventes</span>
+        </div>
+        
+        <!-- Prévisions -->
+        <div class="nav-item" data-page="previsions">
+            <i class="bi bi-crystal"></i>
+            <span>Prévisions mensuelles</span>
+        </div>
+        
+        <!-- Produits rentables -->
+        <div class="nav-item" data-page="rentabilite">
+            <i class="bi bi-cash-stack"></i>
+            <span>Produits les plus rentables</span>
+        </div>
+        
+        <!-- Tendances -->
+        <div class="nav-item" data-page="tendances">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>Analyse des tendances</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Décisions stratégiques -->
+        <div class="nav-item" data-page="decisions">
+            <i class="bi bi-lightbulb"></i>
+            <span>Décisions stratégiques</span>
+            <span class="badge bg-success">3</span>
+        </div>
+        
+        <!-- Optimisation -->
+        <div class="nav-item" data-page="optimisation">
+            <i class="bi bi-cpu"></i>
+            <span>Optimisation</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Rapports -->
+        <div class="nav-item" data-page="rapports">
+            <i class="bi bi-file-text"></i>
+            <span>Rapports exécutifs</span>
+        </div>
+        
+        <!-- Déconnexion -->
+        <div class="nav-item" data-page="logout">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Déconnexion</span>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TOP BAR ==================== -->
+<div class="top-bar">
+    <div class="page-title">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <span id="pageTitle">Tableau de bord</span>
+        <span>Direction</span>
+    </div>
+    
+    <div class="top-bar-actions">
+        <!-- Période -->
+        <div class="date-range">
+            <i class="bi bi-calendar3"></i>
+            <span>Février 2024</span>
+        </div>
+        
+        <!-- Profil -->
+        <div class="user-profile">
+            <div class="user-avatar">
+                DG
+            </div>
+            <div class="user-info">
+                <div class="user-name">Directeur Général</div>
+                <div class="user-role">Décisions stratégiques</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CONTENU PRINCIPAL ==================== -->
+<div class="main-content" id="mainContent">
+    <!-- Le contenu sera chargé dynamiquement -->
+    <div class="loading">
+        <div class="loading-spinner"></div>
+    </div>
+</div>
+
+<!-- ==================== BOOTSTRAP JS ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ==================== JAVASCRIPT PUR ==================== -->
+<script>
+    // ================================================
+    // DONNÉES DE DÉMONSTRATION
+    // ================================================
+    
+    // Données de ventes
+    const ventesData = {
+        categories: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+        valeurs: [45000, 52000, 48000, 58000, 62000, 71000],
+        predictions: [75000, 82000, 88000]
+    };
+
+    // Produits
+    const produits = [
+        { id: 1, nom: 'Ordinateur portable HP', categorie: 'Informatique', ventes: 145, stock: 15, prix: 650, ca: 94250, marge: 28.5, rentabilite: 'elevee', rotation: 8.5 },
+        { id: 2, nom: 'Écran 24 pouces', categorie: 'Informatique', ventes: 89, stock: 8, prix: 180, ca: 16020, marge: 22.0, rentabilite: 'moyenne', rotation: 6.2 },
+        { id: 3, nom: 'Clavier sans fil', categorie: 'Périphériques', ventes: 234, stock: 3, prix: 45, ca: 10530, marge: 35.0, rentabilite: 'elevee', rotation: 12.5 },
+        { id: 4, nom: 'Souris optique', categorie: 'Périphériques', ventes: 312, stock: 25, prix: 29, ca: 9048, marge: 32.5, rentabilite: 'elevee', rotation: 15.2 },
+        { id: 5, nom: 'Chaise de bureau', categorie: 'Mobilier', ventes: 45, stock: 5, prix: 199, ca: 8955, marge: 42.0, rentabilite: 'moyenne', rotation: 4.1 },
+        { id: 6, nom: 'Casque audio', categorie: 'Audio', ventes: 156, stock: 12, prix: 59, ca: 9204, marge: 48.0, rentabilite: 'elevee', rotation: 9.8 }
+    ];
+
+    // Taux de rotation par catégorie
+    const rotationData = {
+        informatique: 7.2,
+        peripheriques: 13.8,
+        mobilier: 4.1,
+        audio: 9.8
+    };
+
+    // Produits dormants
+    const produitsDormants = [
+        { nom: 'Scanner', stock: 8, dernierMouvement: '15/01/2024', jours: 45 },
+        { nom: 'Imprimante laser', stock: 5, dernierMouvement: '20/01/2024', jours: 40 },
+        { nom: 'Table de conférence', stock: 2, dernierMouvement: '05/12/2023', jours: 82 }
+    ];
+
+    // Prévisions
+    const previsions = [
+        { mois: 'Mars 2024', prevision: 75000, confiance: 95, tendance: '+8%' },
+        { mois: 'Avril 2024', prevision: 82000, confiance: 92, tendance: '+9%' },
+        { mois: 'Mai 2024', prevision: 88000, confiance: 88, tendance: '+7%' }
+    ];
+
+    // ================================================
+    // GESTION DU MENU MOBILE
+    // ================================================
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const body = document.body;
+
+    function toggleMenu() {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+        body.classList.toggle('sidebar-open');
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleMenu();
+            }
+        });
+    });
+
+    // ================================================
+    // FONCTION DE CHARGEMENT DU CONTENU
+    // ================================================
+    function loadContent(page) {
+        const mainContent = document.getElementById('mainContent');
+        const pageTitle = document.getElementById('pageTitle');
+        let content = '';
+
+        mainContent.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            switch(page) {
+                case 'dashboard':
+                    pageTitle.textContent = 'Tableau de bord';
+                    content = getDashboardContent();
+                    break;
+                case 'ventes':
+                    pageTitle.textContent = 'Analyse des ventes';
+                    content = getVentesContent();
+                    break;
+                case 'previsions':
+                    pageTitle.textContent = 'Prévisions mensuelles';
+                    content = getPrevisionsContent();
+                    break;
+                case 'rentabilite':
+                    pageTitle.textContent = 'Produits les plus rentables';
+                    content = getRentabiliteContent();
+                    break;
+                case 'tendances':
+                    pageTitle.textContent = 'Analyse des tendances';
+                    content = getTendancesContent();
+                    break;
+                case 'decisions':
+                    pageTitle.textContent = 'Décisions stratégiques';
+                    content = getDecisionsContent();
+                    break;
+                case 'optimisation':
+                    pageTitle.textContent = 'Optimisation';
+                    content = getOptimisationContent();
+                    break;
+                case 'rapports':
+                    pageTitle.textContent = 'Rapports exécutifs';
+                    content = getRapportsContent();
+                    break;
+                default:
+                    content = '<div class="alert alert-info">Page en construction</div>';
+            }
+            
+            mainContent.innerHTML = content;
+            
+            // Initialiser les graphiques après chargement
+            setTimeout(() => {
+                initCharts();
+            }, 100);
+        }, 300);
+    }
+
+    // ================================================
+    // INITIALISATION DES GRAPHIQUES
+    // ================================================
+    function initCharts() {
+        // Graphique d'évolution des ventes
+        const ventesCtx = document.getElementById('ventesChart');
+        if (ventesCtx) {
+            new Chart(ventesCtx, {
+                type: 'line',
+                data: {
+                    labels: ventesData.categories,
+                    datasets: [{
+                        label: 'Ventes (€)',
+                        data: ventesData.valeurs,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37,99,235,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Graphique de répartition des ventes par catégorie
+        const repartitionCtx = document.getElementById('repartitionChart');
+        if (repartitionCtx) {
+            new Chart(repartitionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Informatique', 'Périphériques', 'Mobilier', 'Audio'],
+                    datasets: [{
+                        data: [45, 35, 12, 8],
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Graphique des prévisions
+        const previsionCtx = document.getElementById('previsionChart');
+        if (previsionCtx) {
+            new Chart(previsionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mars', 'Avril', 'Mai'],
+                    datasets: [{
+                        label: 'Prévisions',
+                        data: [75000, 82000, 88000],
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    }
+
+    // ================================================
+    // TABLEAU DE BORD GLOBAL
+    // ================================================
+    function getDashboardContent() {
+        const caTotal = produits.reduce((acc, p) => acc + p.ca, 0);
+        const ventesTotal = produits.reduce((acc, p) => acc + p.ventes, 0);
+        const margeMoyenne = (produits.reduce((acc, p) => acc + p.marge, 0) / produits.length).toFixed(1);
+        const rotationMoyenne = (Object.values(rotationData).reduce((a, b) => a + b, 0) / 4).toFixed(1);
+
+        return `
+            <!-- KPI Principaux -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Chiffre d'affaires</div>
+                        <div class="kpi-value">${caTotal.toLocaleString()} €</div>
+                        <div class="kpi-sub"><span class="text-success">+12.5%</span> vs mois dernier</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Ventes totales</div>
+                        <div class="kpi-value">${ventesTotal}</div>
+                        <div class="kpi-sub"><span class="text-success">+8.3%</span> unités</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Marge moyenne</div>
+                        <div class="kpi-value">${margeMoyenne}%</div>
+                        <div class="kpi-sub"><span class="text-success">+2.1%</span> vs objectif</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Rotation stock</div>
+                        <div class="kpi-value">${rotationMoyenne}</div>
+                        <div class="kpi-sub"><span class="text-warning">-0.5</span> vs mois dernier</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphiques -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Évolution des ventes</h5>
+                            <select class="form-select form-select-sm w-auto">
+                                <option>6 derniers mois</option>
+                                <option>Année en cours</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="ventesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Répartition par catégorie</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="repartitionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indicateurs clés -->
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Taux de rotation par catégorie</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Catégorie</th>
+                                            <th>Taux de rotation</th>
+                                            <th>Performance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Informatique</td>
+                                            <td>${rotationData.informatique}</td>
+                                            <td><span class="badge bg-success">Bon</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Périphériques</td>
+                                            <td>${rotationData.peripheriques}</td>
+                                            <td><span class="badge bg-success">Excellent</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Mobilier</td>
+                                            <td>${rotationData.mobilier}</td>
+                                            <td><span class="badge bg-warning">À surveiller</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Audio</td>
+                                            <td>${rotationData.audio}</td>
+                                            <td><span class="badge bg-success">Bon</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Produits dormants</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produit</th>
+                                            <th>Stock</th>
+                                            <th>Inactif depuis</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${produitsDormants.map(p => `
+                                            <tr>
+                                                <td>${p.nom}</td>
+                                                <td>${p.stock}</td>
+                                                <td>${p.jours} jours</td>
+                                                <td>
+                                                    <button class="btn btn-outline-custom btn-sm" onclick="proposerAction('${p.nom}')">
+                                                        <i class="bi bi-megaphone"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // ANALYSE DES VENTES
+    // ================================================
+    function getVentesContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Analyse détaillée des ventes</h5>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm w-auto">
+                            <option>Par produit</option>
+                            <option>Par catégorie</option>
+                        </select>
+                        <select class="form-select form-select-sm w-auto">
+                            <option>Ce mois</option>
+                            <option>Ce trimestre</option>
+                            <option>Cette année</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Catégorie</th>
+                                    <th>Ventes</th>
+                                    <th>CA (€)</th>
+                                    <th>Marge</th>
+                                    <th>Évolution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${produits.map(p => `
+                                    <tr>
+                                        <td><strong>${p.nom}</strong></td>
+                                        <td>${p.categorie}</td>
+                                        <td>${p.ventes}</td>
+                                        <td>${p.ca.toLocaleString()} €</td>
+                                        <td>${p.marge}%</td>
+                                        <td class="trend-up">
+                                            <i class="bi bi-arrow-up"></i> +${(Math.random() * 15 + 5).toFixed(1)}%
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Ventes par catégorie</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="repartitionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Top 3 des produits</h5>
+                        </div>
+                        <div class="card-body">
+                            ${produits.sort((a, b) => b.ventes - a.ventes).slice(0, 3).map((p, index) => `
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <span class="fw-bold text-primary">${index + 1}</span>
+                                    </div>
+                                    <div>
+                                        <strong>${p.nom}</strong>
+                                        <br><small class="text-muted">${p.ventes} ventes • ${p.ca.toLocaleString()} €</small>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // PRÉVISIONS MENSUELLES
+    // ================================================
+    function getPrevisionsContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Prévisions trimestrielles</h5>
+                    <span class="badge bg-primary">Mis à jour aujourd'hui</span>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="previsionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                ${previsions.map(p => `
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6>${p.mois}</h6>
+                                <h3 class="text-primary">${p.prevision.toLocaleString()} €</h3>
+                                <p class="mb-2">Confiance: ${p.confiance}%</p>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar" style="width: ${p.confiance}%"></div>
+                                </div>
+                                <span class="badge bg-success">${p.tendance}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Recommandations IA</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert bg-light border-start border-4 border-primary">
+                        <strong>📈 Augmentation prévue de 15% des ventes de périphériques</strong>
+                        <p class="small text-muted mt-2">Recommandation : Augmenter le stock de claviers et souris de 30% pour le mois prochain.</p>
+                    </div>
+                    <div class="alert bg-light border-start border-4 border-warning">
+                        <strong>📉 Baisse saisonnière anticipée pour le mobilier</strong>
+                        <p class="small text-muted mt-2">Recommandation : Réduire les commandes de 20% pour éviter le surstock.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // PRODUITS LES PLUS RENTABLES
+    // ================================================
+    function getRentabiliteContent() {
+        const produitsTries = [...produits].sort((a, b) => b.marge - a.marge);
+        
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Classement par rentabilité</h5>
+                    <select class="form-select form-select-sm w-auto">
+                        <option>Par marge</option>
+                        <option>Par CA</option>
+                        <option>Par rotation</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Rang</th>
+                                    <th>Produit</th>
+                                    <th>Catégorie</th>
+                                    <th>Marge</th>
+                                    <th>CA (€)</th>
+                                    <th>Rotation</th>
+                                    <th>Rentabilité</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${produitsTries.map((p, index) => `
+                                    <tr>
+                                        <td><span class="fw-bold">#${index + 1}</span></td>
+                                        <td>${p.nom}</td>
+                                        <td>${p.categorie}</td>
+                                        <td>${p.marge}%</td>
+                                        <td>${p.ca.toLocaleString()} €</td>
+                                        <td>${p.rotation}</td>
+                                        <td><span class="badge-rentabilite ${p.rentabilite}">${p.rentabilite === 'elevee' ? 'Élevée' : p.rentabilite === 'moyenne' ? 'Moyenne' : 'Faible'}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Analyse de rentabilité</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Marge moyenne</h6>
+                                <h3 class="text-primary">${(produits.reduce((acc, p) => acc + p.marge, 0) / produits.length).toFixed(1)}%</h3>
+                            </div>
+                            <div class="mb-4">
+                                <h6>Produit le plus rentable</h6>
+                                <h5>${produitsTries[0].nom}</h5>
+                                <p class="text-muted">Marge: ${produitsTries[0].marge}% | CA: ${produitsTries[0].ca.toLocaleString()} €</p>
+                            </div>
+                            <div>
+                                <h6>Produit à améliorer</h6>
+                                <h5>${produitsTries[produitsTries.length - 1].nom}</h5>
+                                <p class="text-muted">Marge: ${produitsTries[produitsTries.length - 1].marge}% | Rotation: ${produitsTries[produitsTries.length - 1].rotation}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Décisions stratégiques</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="decision1">
+                                        <label class="form-check-label" for="decision1">
+                                            <strong>Augmenter commandes périphériques</strong>
+                                            <br><small class="text-muted">Rentabilité élevée, forte demande</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="decision2">
+                                        <label class="form-check-label" for="decision2">
+                                            <strong>Réduire stock mobilier</strong>
+                                            <br><small class="text-muted">Rotation faible, produits dormants</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="decision3">
+                                        <label class="form-check-label" for="decision3">
+                                            <strong>Promotion sur casques audio</strong>
+                                            <br><small class="text-muted">Marge élevée, saisonnalité</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary-custom mt-3 w-100">Appliquer les décisions</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // ANALYSE DES TENDANCES
+    // ================================================
+    function getTendancesContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Tendances du marché</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Tendances à la hausse</h6>
+                            <div class="list-group mt-3">
+                                <div class="list-group-item d-flex justify-content-between">
+                                    <span><i class="bi bi-arrow-up text-success me-2"></i>Périphériques gaming</span>
+                                    <span class="badge bg-success">+28%</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    <span><i class="bi bi-arrow-up text-success me-2"></i>Casques sans fil</span>
+                                    <span class="badge bg-success">+22%</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    <span><i class="bi bi-arrow-up text-success me-2"></i>Ordinateurs portables</span>
+                                    <span class="badge bg-success">+15%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>Tendances à la baisse</h6>
+                            <div class="list-group mt-3">
+                                <div class="list-group-item d-flex justify-content-between">
+                                    <span><i class="bi bi-arrow-down text-danger me-2"></i>Imprimantes</span>
+                                    <span class="badge bg-danger">-12%</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    <span><i class="bi bi-arrow-down text-danger me-2"></i>Mobilier de bureau</span>
+                                    <span class="badge bg-danger">-8%</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    <span><i class="bi bi-arrow-down text-danger me-2"></i>Stockage externe</span>
+                                    <span class="badge bg-danger">-5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h6>Analyse saisonnière</h6>
+                    <div class="table-responsive mt-3">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Période</th>
+                                    <th>Impact</th>
+                                    <th>Produits concernés</th>
+                                    <th>Recommandation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Rentrée scolaire</td>
+                                    <td><span class="badge bg-success">+25%</span></td>
+                                    <td>Ordinateurs, périphériques</td>
+                                    <td>Augmenter stock août/septembre</td>
+                                </tr>
+                                <tr>
+                                    <td>Black Friday</td>
+                                    <td><span class="badge bg-success">+45%</span></td>
+                                    <td>Tous produits</td>
+                                    <td>Préparer promotions</td>
+                                </tr>
+                                <tr>
+                                    <td>Fin d'année</td>
+                                    <td><span class="badge bg-warning">-15%</span></td>
+                                    <td>Mobilier</td>
+                                    <td>Réduire commandes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // DÉCISIONS STRATÉGIQUES
+    // ================================================
+    function getDecisionsContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title">Produits à booster</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <strong>Clavier sans fil</strong>
+                                    <p class="small text-muted mb-2">Marge: 35% | Tendance: +22%</p>
+                                    <button class="btn btn-primary-custom btn-sm w-100">
+                                        <i class="bi bi-plus-circle me-2"></i>Augmenter budget
+                                    </button>
+                                </div>
+                                <div class="list-group-item">
+                                    <strong>Casque audio</strong>
+                                    <p class="small text-muted mb-2">Marge: 48% | Tendance: +28%</p>
+                                    <button class="btn btn-primary-custom btn-sm w-100">
+                                        <i class="bi bi-plus-circle me-2"></i>Augmenter budget
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title">Produits à réduire</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <strong>Chaise de bureau</strong>
+                                    <p class="small text-muted mb-2">Rotation: 4.1 | Tendance: -8%</p>
+                                    <button class="btn btn-outline-custom btn-sm w-100">
+                                        <i class="bi bi-dash-circle me-2"></i>Réduire commandes
+                                    </button>
+                                </div>
+                                <div class="list-group-item">
+                                    <strong>Écran 24"</strong>
+                                    <p class="small text-muted mb-2">Stock: 8 | Rotation: 6.2</p>
+                                    <button class="btn btn-outline-custom btn-sm w-100">
+                                        <i class="bi bi-dash-circle me-2"></i>Réduire commandes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title">Changement fournisseur</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <strong>Mobilier IKEA</strong>
+                                    <p class="small text-muted mb-2">Délais: 5j | Note: 4.0</p>
+                                    <button class="btn btn-outline-custom btn-sm w-100">
+                                        <i class="bi bi-arrow-repeat me-2"></i>Comparer
+                                    </button>
+                                </div>
+                                <div class="list-group-item">
+                                    <strong>Alternative trouvée</strong>
+                                    <p class="small text-muted mb-2">Économie potentielle: 12%</p>
+                                    <button class="btn btn-primary-custom btn-sm w-100">
+                                        <i class="bi bi-check-lg me-2"></i>Changer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Plan d'action stratégique</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Priorité</th>
+                                    <th>Action</th>
+                                    <th>Impact prévu</th>
+                                    <th>Échéance</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge bg-danger">Haute</span></td>
+                                    <td>Réapprovisionnement périphériques</td>
+                                    <td>+15% CA</td>
+                                    <td>15/03/2024</td>
+                                    <td><span class="badge bg-warning">En cours</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-warning">Moyenne</span></td>
+                                    <td>Promotion casques audio</td>
+                                    <td>+25% ventes</td>
+                                    <td>01/04/2024</td>
+                                    <td><span class="badge bg-info">Planifié</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-success">Basse</span></td>
+                                    <td>Négociation fournisseur mobilier</td>
+                                    <td>-8% coûts</td>
+                                    <td>30/04/2024</td>
+                                    <td><span class="badge bg-secondary">À faire</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // OPTIMISATION
+    // ================================================
+    function getOptimisationContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Optimisation des coûts</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Coût de stockage</h6>
+                                <h3 class="text-primary">12 450 €</h3>
+                                <p class="text-success"><i class="bi bi-arrow-down"></i> -8% vs mois dernier</p>
+                            </div>
+                            
+                            <h6>Répartition des coûts</h6>
+                            <div class="progress-stacked mt-3">
+                                <div class="progress" style="width: 45%">
+                                    <div class="progress-bar bg-primary" style="width: 100%">Stock actif 45%</div>
+                                </div>
+                                <div class="progress" style="width: 30%">
+                                    <div class="progress-bar bg-warning" style="width: 100%">Stock lent 30%</div>
+                                </div>
+                                <div class="progress" style="width: 25%">
+                                    <div class="progress-bar bg-danger" style="width: 100%">Stock dormant 25%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Recommandations d'optimisation</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <strong>Liquider stock dormant</strong>
+                                    <p class="small text-muted">3 produits • Valeur: 2 450 €</p>
+                                    <button class="btn btn-outline-custom btn-sm">Lancer promotion</button>
+                                </div>
+                                <div class="list-group-item">
+                                    <strong>Optimiser commandes périphériques</strong>
+                                    <p class="small text-muted">Économie potentielle: 850 €/mois</p>
+                                    <button class="btn btn-outline-custom btn-sm">Appliquer</button>
+                                </div>
+                                <div class="list-group-item">
+                                    <strong>Négocier tarifs fournisseurs</strong>
+                                    <p class="small text-muted">3 fournisseurs avec délais longs</p>
+                                    <button class="btn btn-outline-custom btn-sm">Contacter</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // RAPPORTS EXÉCUTIFS
+    // ================================================
+    function getRapportsContent() {
+        return `
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-pdf fs-1 text-danger mb-3"></i>
+                            <h6>Rapport mensuel</h6>
+                            <p class="small text-muted">Février 2024</p>
+                            <button class="btn btn-primary-custom btn-sm w-100">
+                                <i class="bi bi-download me-2"></i>Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-excel fs-1 text-success mb-3"></i>
+                            <h6>Rapport trimestriel</h6>
+                            <p class="small text-muted">Q1 2024</p>
+                            <button class="btn btn-primary-custom btn-sm w-100">
+                                <i class="bi bi-download me-2"></i>Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-bar graph fs-1 text-primary mb-3"></i>
+                            <h6>Analyse stratégique</h6>
+                            <p class="small text-muted">Prévisions 2024</p>
+                            <button class="btn btn-primary-custom btn-sm w-100">
+                                <i class="bi bi-download me-2"></i>Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Indicateurs clés de performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>KPI</th>
+                                    <th>Valeur</th>
+                                    <th>Objectif</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Chiffre d'affaires</td>
+                                    <td>148 007 €</td>
+                                    <td>150 000 €</td>
+                                    <td><span class="badge bg-warning">-1.3%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Marge moyenne</td>
+                                    <td>34.7%</td>
+                                    <td>32%</td>
+                                    <td><span class="badge bg-success">+2.7%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Rotation stock</td>
+                                    <td>8.7</td>
+                                    <td>9.0</td>
+                                    <td><span class="badge bg-warning">-0.3</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Stock dormant</td>
+                                    <td>2 450 €</td>
+                                    <td>< 2 000 €</td>
+                                    <td><span class="badge bg-danger">+22%</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // FONCTIONS UTILITAIRES
+    // ================================================
+    function proposerAction(produit) {
+        alert(`Proposition d'action pour ${produit} : Promotion ou liquidation ?`);
+    }
+
+    // ================================================
+    // INITIALISATION
+    // ================================================
+    function initNavigation() {
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const page = this.getAttribute('data-page');
+                
+                if(page === 'logout') {
+                    if(confirm('Déconnexion ?')) {
+                        window.location.href = 'index.html';
+                    }
+                    return;
+                }
+                
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                loadContent(page);
+            });
+        });
+    }
+
+    window.addEventListener('resize', function() {
+        if(window.innerWidth > 768) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            body.classList.remove('sidebar-open');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initNavigation();
+        loadContent('dashboard');
+        console.log('%c📊 Espace Direction - Version Responsive', 'color: #2563eb; font-size: 14px; font-weight: bold;');
+    });
+</script>
+
+</body>
+</html>

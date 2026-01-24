@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>StockPredict - Connexion</title>
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --blue: #2563eb;
+            --green: #10b981;
+            --red: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, var(--blue), var(--green));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--blue);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Barre de navigation simplifiée */
+        .nav-simple {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 50px;
+            background: #f1f5f9;
+        }
+
+        .back-btn:hover {
+            background: var(--gradient);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .back-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Conteneur principal */
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            background: #ffffff;
+        }
+
+        .connexion-container {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Titre */
+        .page-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--blue);
+            margin-bottom: 10px;
+        }
+
+        .page-title h1 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-title p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        /* Cartes de rôles */
+        .role-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            height: 100%;
+        }
+
+        .role-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--blue);
+            box-shadow: 0 20px 40px rgba(37,99,235,0.1);
+        }
+
+        .role-card.active {
+            border-color: var(--blue);
+            background: linear-gradient(135deg, rgba(37,99,235,0.02), rgba(16,185,129,0.02));
+            box-shadow: 0 20px 40px rgba(37,99,235,0.15);
+        }
+
+        .role-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.1));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .role-icon i {
+            font-size: 2.5rem;
+            color: var(--blue);
+        }
+
+        .role-card h3 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .role-card p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        /* Formulaire de connexion */
+        .form-container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            margin-top: 30px;
+            display: none;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-container.active {
+            display: block;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-title h2 {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        .form-title p {
+            color: #64748b;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+            outline: none;
+        }
+
+        .btn-connexion {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-connexion:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37,99,235,0.3);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .remember-forgot a {
+            color: var(--blue);
+            text-decoration: none;
+        }
+
+        .remember-forgot a:hover {
+            color: var(--green);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .register-link a {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover {
+            color: var(--green);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-simple {
+                padding: 15px 20px;
+            }
+            
+            .page-title h1 {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 25px;
+            }
+            
+            .role-card {
+                padding: 20px 15px;
+            }
+            
+            .role-icon {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .role-icon i {
+                font-size: 2rem;
+            }
+            
+            .remember-forgot {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-simple {
+                padding: 12px 15px;
+            }
+            
+            .page-title h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== BARRE DE NAVIGATION SIMPLE ==================== -->
+<nav class="nav-simple">
+    <a href="index.html" class="back-btn">
+        <i class="bi bi-arrow-left"></i>
+        <span>Retour à l'accueil</span>
+    </a>
+</nav>
+
+<!-- ==================== CONTENU PRINCIPAL ==================== -->
+<div class="main-container">
+    <div class="connexion-container">
+        <!-- Titre -->
+        <div class="page-title">
+            <h1>Stock<span>Predict</span></h1>
+            <p>Connectez-vous à votre espace</p>
+        </div>
+        
+        <!-- Blocs de rôles -->
+        <div class="row g-4">
+            <!-- Gestionnaire de stock -->
+            <div class="col-md-4">
+                <div class="role-card" data-role="gestionnaire" onclick="selectRole('gestionnaire')">
+                    <div class="role-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h3>Gestionnaire de stock</h3>
+                    <p>Accédez à votre espace de gestion quotidienne</p>
+                </div>
+            </div>
+            
+            <!-- Responsable des achats -->
+            <div class="col-md-4">
+                <div class="role-card" data-role="achats" onclick="selectRole('achats')">
+                    <div class="role-icon">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <h3>Responsable des achats</h3>
+                    <p>Gérez vos commandes et fournisseurs</p>
+                </div>
+            </div>
+            
+            <!-- Directeur -->
+            <div class="col-md-4">
+                <div class="role-card" data-role="directeur" onclick="selectRole('directeur')">
+                    <div class="role-icon">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h3>Directeur</h3>
+                    <p>Accédez aux analyses et décisions stratégiques</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire Gestionnaire de stock -->
+        <div class="form-container" id="formGestionnaire">
+            <div class="form-title">
+                <h2><i class="bi bi-box-seam me-2" style="color: var(--blue);"></i>Connexion Gestionnaire</h2>
+                <p>Connectez-vous à votre espace de gestion</p>
+            </div>
+            
+            <form onsubmit="event.preventDefault(); connecter('gestionnaire')">
+                <div class="mb-3">
+                    <label class="form-label">Email professionnel</label>
+                    <input type="email" class="form-control" placeholder="gestionnaire@entreprise.fr" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <div class="remember-forgot">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember">
+                        <label class="form-check-label" for="remember">
+                            Se souvenir de moi
+                        </label>
+                    </div>
+                    <a href="#">Mot de passe oublié ?</a>
+                </div>
+                
+                <button type="submit" class="btn-connexion">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    Se connecter
+                </button>
+            </form>
+            
+            <div class="register-link">
+                <p>Pas encore de compte ? <a href="./inscription.html">S'inscrire</a></p>
+            </div>
+        </div>
+
+        <!-- Formulaire Responsable des achats -->
+        <div class="form-container" id="formAchats">
+            <div class="form-title">
+                <h2><i class="bi bi-truck me-2" style="color: var(--blue);"></i>Connexion Responsable Achats</h2>
+                <p>Connectez-vous à votre espace achats</p>
+            </div>
+            
+            <form onsubmit="event.preventDefault(); connecter('achats')">
+                <div class="mb-3">
+                    <label class="form-label">Email professionnel</label>
+                    <input type="email" class="form-control" placeholder="achats@entreprise.fr" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <div class="remember-forgot">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember2">
+                        <label class="form-check-label" for="remember2">
+                            Se souvenir de moi
+                        </label>
+                    </div>
+                    <a href="#">Mot de passe oublié ?</a>
+                </div>
+                
+                <button type="submit" class="btn-connexion">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    Se connecter
+                </button>
+            </form>
+            
+            <div class="register-link">
+                <p>Pas encore de compte ? <a href="./inscription.html">S'inscrire</a></p>
+            </div>
+        </div>
+
+        <!-- Formulaire Directeur -->
+        <div class="form-container" id="formDirecteur">
+            <div class="form-title">
+                <h2><i class="bi bi-graph-up-arrow me-2" style="color: var(--blue);"></i>Connexion Direction</h2>
+                <p>Connectez-vous à votre espace stratégique</p>
+            </div>
+            
+            <form onsubmit="event.preventDefault(); connecter('directeur')">
+                <div class="mb-3">
+                    <label class="form-label">Email professionnel</label>
+                    <input type="email" class="form-control" placeholder="direction@entreprise.fr" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <div class="remember-forgot">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember3">
+                        <label class="form-check-label" for="remember3">
+                            Se souvenir de moi
+                        </label>
+                    </div>
+                    <a href="#">Mot de passe oublié ?</a>
+                </div>
+                
+                <button type="submit" class="btn-connexion">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    Se connecter
+                </button>
+            </form>
+            
+            <div class="register-link">
+                <p>Pas encore de compte ? <a href="./inscription.html">S'inscrire</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Sélection des rôles
+    function selectRole(role) {
+        // Réinitialiser les classes actives
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        
+        // Activer la carte cliquée
+        document.querySelector(`[data-role="${role}"]`).classList.add('active');
+        
+        // Cacher tous les formulaires
+        document.querySelectorAll('.form-container').forEach(form => {
+            form.classList.remove('active');
+        });
+        
+        // Afficher le formulaire correspondant
+        document.getElementById(`form${role.charAt(0).toUpperCase() + role.slice(1)}`).classList.add('active');
+        
+        // Animation de scroll vers le formulaire
+        setTimeout(() => {
+            document.querySelector('.form-container.active').scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }, 100);
+    }
+
+    // Fonction de connexion
+    function connecter(role) {
+        alert(`Connexion ${role} en cours...`);
+        
+        // Redirection vers l'espace correspondant
+        setTimeout(() => {
+            switch(role) {
+                case 'gestionnaire':
+                    window.location.href = 'gestionnaire.html';
+                    break;
+                case 'achats':
+                    window.location.href = 'achats.html';
+                    break;
+                case 'directeur':
+                    window.location.href = 'directeur.html';
+                    break;
+            }
+        }, 1500);
+    }
+
+    // Vérifier si un rôle est pré-sélectionné dans l'URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+        
+        if(role && ['gestionnaire', 'achats', 'directeur'].includes(role)) {
+            selectRole(role);
+        }
+    });
+</script>
+
+</body>
+</html>

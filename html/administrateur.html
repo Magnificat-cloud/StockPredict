@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>StockPredict - Administration</title>
+    
+    <!-- ==================== BOOTSTRAP PUR ==================== -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- ==================== CSS PERSONNALISÉ ==================== -->
+    <style>
+        /* ===== VARIABLES ===== */
+        :root {
+            --blue: #2563eb;
+            --green: #10b981;
+            --red: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, var(--blue), var(--green));
+            --sidebar-width: 280px;
+            --sidebar-width-mobile: 85%;
+            --top-bar-height: 80px;
+        }
+
+        /* ===== STYLES GÉNÉRAUX ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+
+        /* ===== SIDEBAR FIXE AVEC RESPONSIVE ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Sidebar responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width-mobile);
+                max-width: 320px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            body.sidebar-open {
+                overflow: hidden;
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                backdrop-filter: blur(3px);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--gradient);
+            border-radius: 10px;
+        }
+
+        /* En-tête sidebar */
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 2px solid #f1f5f9;
+            background: linear-gradient(135deg, rgba(37,99,235,0.02), rgba(16,185,129,0.02));
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header {
+                padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar-header {
+                padding: 15px 12px;
+            }
+        }
+
+        .sidebar-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .brand-blue {
+            color: var(--blue);
+        }
+
+        .brand-green {
+            color: var(--green);
+        }
+
+        .sidebar-header p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.1));
+            padding: 8px 15px;
+            border-radius: 50px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+            border: 1px solid rgba(37,99,235,0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-badge i {
+            color: var(--blue);
+            margin-right: 8px;
+        }
+
+        /* Menu de navigation */
+        .sidebar-menu {
+            padding: 20px 15px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-menu {
+                padding: 15px 10px;
+            }
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .nav-item {
+                padding: 10px 15px;
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+
+        .nav-item i {
+            font-size: 1.3rem;
+            width: 25px;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(16,185,129,0.05));
+            color: var(--blue);
+            transform: translateX(5px);
+        }
+
+        .nav-item:hover i {
+            color: var(--blue);
+        }
+
+        .nav-item.active {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+        }
+
+        .nav-item.active i {
+            color: white;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            margin: 20px 0;
+        }
+
+        /* ===== TOP BAR RESPONSIVE ===== */
+        .top-bar {
+            margin-left: var(--sidebar-width);
+            padding: 20px 30px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            transition: margin-left 0.3s ease;
+            min-height: var(--top-bar-height);
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                margin-left: 0;
+                padding: 15px 20px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .top-bar {
+                margin-left: 240px;
+                padding: 15px 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-bar {
+                padding: 12px 15px;
+            }
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1rem;
+            }
+        }
+
+        .page-title span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .page-title span {
+                display: none;
+            }
+        }
+
+        .search-box {
+            background: #f1f5f9;
+            border-radius: 50px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 300px;
+        }
+
+        @media (max-width: 1024px) {
+            .search-box {
+                width: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-box {
+                display: none;
+            }
+        }
+
+        .search-box i {
+            color: #94a3b8;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 0.95rem;
+        }
+
+        .search-box input::placeholder {
+            color: #94a3b8;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .top-bar-actions {
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-bar-actions {
+                gap: 8px;
+            }
+        }
+
+        .notifications {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notifications i {
+            font-size: 1.3rem;
+            color: #64748b;
+        }
+
+        .notifications-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--red);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: #f1f5f9;
+        }
+
+        @media (max-width: 480px) {
+            .user-profile {
+                padding: 5px;
+            }
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        .user-info {
+            line-height: 1.3;
+        }
+
+        @media (max-width: 768px) {
+            .user-info {
+                display: none;
+            }
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* ===== CONTENU PRINCIPAL RESPONSIVE ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - var(--top-bar-height));
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px 15px;
+                width: 100%;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .main-content {
+                margin-left: 240px;
+                padding: 25px;
+                width: calc(100% - 240px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 15px 12px;
+            }
+        }
+
+        /* ===== CARTES STATISTIQUES RESPONSIVES ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-card {
+                padding: 15px;
+            }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 480px) {
+            .stat-title {
+                font-size: 0.8rem;
+            }
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.1));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .stat-icon {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        .stat-icon i {
+            font-size: 1.8rem;
+            color: var(--blue);
+        }
+
+        @media (max-width: 768px) {
+            .stat-icon i {
+                font-size: 1.5rem;
+            }
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-value {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--green);
+        }
+
+        .stat-change.negative {
+            color: var(--red);
+        }
+
+        /* ===== TABLEAUX RESPONSIVES ===== */
+        .card {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: white;
+            border-bottom: 2px solid #f1f5f9;
+            padding: 20px 25px;
+            border-radius: 20px 20px 0 0 !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .card-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card-header {
+                padding: 12px 15px;
+            }
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .card-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card-body {
+                padding: 15px;
+            }
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -15px;
+            padding: 0 15px;
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive {
+                margin: 0 -10px;
+                padding: 0 10px;
+            }
+        }
+
+        .table {
+            margin-bottom: 0;
+            min-width: 600px;
+        }
+
+        @media (max-width: 768px) {
+            .table {
+                min-width: 500px;
+            }
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            padding: 15px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .table thead th,
+            .table tbody td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .badge-role {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .badge-role.admin {
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.2));
+            color: var(--blue);
+        }
+
+        .badge-role.manager {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.2));
+            color: var(--green);
+        }
+
+        .badge-role.user {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .badge-status {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .badge-status.active {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-status.inactive {
+            background: #fee2e2;
+            color: var(--red);
+        }
+
+        .badge-status.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+
+        @media (max-width: 768px) {
+            .action-btn {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        .action-btn:hover {
+            background: var(--blue);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: var(--red);
+        }
+
+        /* ===== FORMULAIRES RESPONSIVES ===== */
+        .form-label {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .form-control, .form-select {
+                padding: 10px 12px;
+            }
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+            outline: none;
+        }
+
+        /* ===== BOUTONS RESPONSIVES ===== */
+        .btn-blue, .btn-green, .btn-outline-blue {
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .btn-blue, .btn-green, .btn-outline-blue {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-blue, .btn-green, .btn-outline-blue {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: white;
+            border: none;
+        }
+
+        .btn-blue:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+            color: white;
+        }
+
+        .btn-green {
+            background: var(--green);
+            color: white;
+            border: none;
+        }
+
+        .btn-green:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16,185,129,0.3);
+            color: white;
+        }
+
+        .btn-outline-blue {
+            border: 2px solid var(--blue);
+            color: var(--blue);
+            background: transparent;
+        }
+
+        .btn-outline-blue:hover {
+            background: var(--blue);
+            color: white;
+        }
+
+        /* ===== MODAL RESPONSIVE ===== */
+        .modal-dialog {
+            margin: 10px;
+            max-width: 500px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-dialog {
+                margin: 5px;
+            }
+            
+            .modal-content {
+                border-radius: 15px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-dialog {
+                margin: 0;
+                min-height: 100%;
+            }
+            
+            .modal-content {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: var(--gradient);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px 25px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-header {
+                padding: 15px 20px;
+            }
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .modal-title {
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer button {
+                width: 100%;
+                margin: 0;
+            }
+        }
+
+        /* ===== LOADING ===== */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f1f5f9;
+            border-top: 5px solid var(--blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== OVERLAY POUR MENU MOBILE ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            backdrop-filter: blur(3px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ===== UTILITAIRES RESPONSIVES ===== */
+        .d-flex-responsive {
+            display: flex;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .d-flex-responsive {
+                flex-direction: column;
+            }
+        }
+
+        .w-100-mobile {
+            width: auto;
+        }
+
+        @media (max-width: 768px) {
+            .w-100-mobile {
+                width: 100%;
+            }
+        }
+
+        .text-center-mobile {
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .text-center-mobile {
+                text-align: center;
+            }
+        }
+
+        .gap-responsive {
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .gap-responsive {
+                gap: 15px;
+            }
+        }
+
+        /* Masquer éléments sur mobile */
+        @media (max-width: 768px) {
+            .hide-mobile {
+                display: none;
+            }
+        }
+
+        /* Afficher sur mobile */
+        @media (min-width: 769px) {
+            .show-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== OVERLAY POUR MENU MOBILE ==================== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ==================== SIDEBAR FIXE ==================== -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>
+            <span class="brand-blue">Stock</span><span class="brand-green">Predict</span>
+        </h2>
+        <p>Espace Administrateur</p>
+        <div class="admin-badge">
+            <i class="bi bi-shield-check"></i>
+            ATINDEHOU Magnificat
+        </div>
+    </div>
+    
+    <div class="sidebar-menu">
+        <!-- Dashboard -->
+        <div class="nav-item active" data-page="dashboard">
+            <i class="bi bi-speedometer2"></i>
+            <span>Tableau de bord</span>
+        </div>
+        
+        <!-- Utilisateurs -->
+        <div class="nav-item" data-page="users">
+            <i class="bi bi-people"></i>
+            <span>Gestion des utilisateurs</span>
+        </div>
+        
+        <!-- Rôles et permissions -->
+        <div class="nav-item" data-page="roles">
+            <i class="bi bi-shield-lock"></i>
+            <span>Rôles & permissions</span>
+        </div>
+        
+        <!-- Seuils d'alerte -->
+        <div class="nav-item" data-page="seuils">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>Seuils d'alerte</span>
+        </div>
+        
+        <!-- Module prédictif -->
+        <div class="nav-item" data-page="predictif">
+            <i class="bi bi-cpu"></i>
+            <span>Module prédictif</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Rapports -->
+        <div class="nav-item" data-page="rapports">
+            <i class="bi bi-graph-up"></i>
+            <span>Rapports globaux</span>
+        </div>
+        
+        <!-- Paramètres -->
+        <div class="nav-item" data-page="parametres">
+            <i class="bi bi-sliders2"></i>
+            <span>Paramètres système</span>
+        </div>
+        
+        <!-- Journal -->
+        <div class="nav-item" data-page="journal">
+            <i class="bi bi-journal-text"></i>
+            <span>Journal d'activité</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Sauvegardes -->
+        <div class="nav-item" data-page="sauvegardes">
+            <i class="bi bi-database"></i>
+            <span>Sauvegardes</span>
+        </div>
+        
+        <!-- Déconnexion -->
+        <div class="nav-item" data-page="logout">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Déconnexion</span>
+        </div>
+    </div>
+    
+    <!-- Version -->
+    <div class="text-center py-3 hide-mobile" style="border-top: 1px solid #f1f5f9;">
+        <small class="text-muted">Version 2.0.0 • Sécurisé</small>
+    </div>
+</div>
+
+<!-- ==================== TOP BAR ==================== -->
+<div class="top-bar">
+    <div class="page-title">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <span id="pageTitle">Tableau de bord</span>
+        <span>Magnificat</span>
+    </div>
+    
+    <div class="top-bar-actions">
+        <!-- Recherche -->
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Rechercher...">
+        </div>
+        
+        <!-- Notifications -->
+        <div class="notifications">
+            <i class="bi bi-bell"></i>
+            <span class="notifications-badge">3</span>
+        </div>
+        
+        <!-- Profil -->
+        <div class="user-profile">
+            <div class="user-avatar">
+                MA
+            </div>
+            <div class="user-info">
+                <div class="user-name">ATINDEHOU Magnificat</div>
+                <div class="user-role">Administrateur système</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CONTENU PRINCIPAL ==================== -->
+<div class="main-content" id="mainContent">
+    <!-- Le contenu sera chargé dynamiquement -->
+    <div class="loading">
+        <div class="loading-spinner"></div>
+    </div>
+</div>
+
+<!-- ==================== MODAL AJOUTER UTILISATEUR ==================== -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-plus me-2"></i>
+                    Ajouter un utilisateur
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nom complet</label>
+                        <input type="text" class="form-control" placeholder="Jean Dupont" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" placeholder="email@exemple.com" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Rôle</label>
+                        <select class="form-select" required>
+                            <option value="">Sélectionner un rôle</option>
+                            <option value="admin">Administrateur</option>
+                            <option value="manager">Gestionnaire de stock</option>
+                            <option value="achats">Responsable achats</option>
+                            <option value="direction">Direction</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Mot de passe temporaire</label>
+                        <input type="text" class="form-control" value="Temp123456" readonly>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="sendEmail" checked>
+                        <label class="form-check-label" for="sendEmail">
+                            Envoyer les identifiants par email
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-green w-100-mobile" onclick="ajouterUtilisateur()">
+                    <i class="bi bi-check-lg me-2"></i>Créer l'utilisateur
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== BOOTSTRAP JS ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ==================== JAVASCRIPT PUR ==================== -->
+<script>
+    // ================================================
+    // DONNÉES DE L'ADMINISTRATEUR
+    // ================================================
+    const ADMIN = {
+        nom: 'ATINDEHOU Magnificat',
+        email: 'magnificat.atindehou@stockpredict.com',
+        role: 'Administrateur système',
+        avatar: 'MA'
+    };
+
+    // ================================================
+    // DONNÉES DE DÉMONSTRATION
+    // ================================================
+    const usersData = [
+        { id: 1, nom: 'Jean Dupont', email: 'jean.dupont@email.com', role: 'admin', status: 'actif', lastLogin: '2024-02-24 09:30' },
+        { id: 2, nom: 'Marie Martin', email: 'marie.martin@email.com', role: 'manager', status: 'actif', lastLogin: '2024-02-24 10:15' },
+        { id: 3, nom: 'Pierre Lefebvre', email: 'pierre.lefebvre@email.com', role: 'manager', status: 'inactif', lastLogin: '2024-02-20' },
+        { id: 4, nom: 'Sophie Bernard', email: 'sophie.bernard@email.com', role: 'achats', status: 'actif', lastLogin: '2024-02-23 16:45' },
+        { id: 5, nom: 'Lucas Moreau', email: 'lucas.moreau@email.com', role: 'direction', status: 'actif', lastLogin: '2024-02-24 08:20' },
+        { id: 6, nom: 'Emma Petit', email: 'emma.petit@email.com', role: 'admin', status: 'en_attente', lastLogin: 'Jamais' }
+    ];
+
+    // ================================================
+    // GESTION DU MENU MOBILE
+    // ================================================
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const body = document.body;
+
+    function toggleMenu() {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+        body.classList.toggle('sidebar-open');
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+
+    // Fermer le menu quand on clique sur un lien
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleMenu();
+            }
+        });
+    });
+
+    // ================================================
+    // FONCTION DE CHARGEMENT DU CONTENU
+    // ================================================
+    function loadContent(page) {
+        const mainContent = document.getElementById('mainContent');
+        const pageTitle = document.getElementById('pageTitle');
+        let content = '';
+
+        // Afficher le loading
+        mainContent.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        `;
+
+        // Simuler un chargement asynchrone
+        setTimeout(() => {
+            switch(page) {
+                case 'dashboard':
+                    pageTitle.textContent = 'Tableau de bord';
+                    content = getDashboardContent();
+                    break;
+                case 'users':
+                    pageTitle.textContent = 'Gestion des utilisateurs';
+                    content = getUsersContent();
+                    break;
+                case 'roles':
+                    pageTitle.textContent = 'Rôles et permissions';
+                    content = getRolesContent();
+                    break;
+                case 'seuils':
+                    pageTitle.textContent = 'Seuils d\'alerte';
+                    content = getSeuilsContent();
+                    break;
+                case 'predictif':
+                    pageTitle.textContent = 'Module prédictif';
+                    content = getPredictifContent();
+                    break;
+                case 'rapports':
+                    pageTitle.textContent = 'Rapports globaux';
+                    content = getRapportsContent();
+                    break;
+                case 'parametres':
+                    pageTitle.textContent = 'Paramètres système';
+                    content = getParametresContent();
+                    break;
+                case 'journal':
+                    pageTitle.textContent = 'Journal d\'activité';
+                    content = getJournalContent();
+                    break;
+                case 'sauvegardes':
+                    pageTitle.textContent = 'Sauvegardes';
+                    content = getSauvegardesContent();
+                    break;
+                default:
+                    content = '<div class="alert alert-info">Page en construction</div>';
+            }
+            
+            mainContent.innerHTML = content;
+            
+            // Réinitialiser les événements après chargement
+            initPageEvents();
+        }, 500);
+    }
+
+    // ================================================
+    // CONTENU DU DASHBOARD
+    // ================================================
+    function getDashboardContent() {
+        return `
+            <!-- Statistiques -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Utilisateurs actifs</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">1,284</div>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i>
+                        <span>+12% cette semaine</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Rôles configurés</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-shield-lock"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">8</div>
+                    <div class="stat-change positive">
+                        <i class="bi bi-check-circle"></i>
+                        <span>4 administrateurs</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Seuils d'alerte</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">23</div>
+                    <div class="stat-change negative">
+                        <i class="bi bi-arrow-down"></i>
+                        <span>2 seuils critiques</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Précision IA</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">95%</div>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i>
+                        <span>+5% ce mois</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Graphique et activités -->
+            <div class="row">
+                <div class="col-lg-8 mb-4 mb-lg-0">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Activité des utilisateurs</h5>
+                            <select class="form-select form-select-sm w-auto">
+                                <option>7 derniers jours</option>
+                                <option>30 derniers jours</option>
+                                <option>Cette année</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px; background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(16,185,129,0.05)); border-radius: 15px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-bar-chart-line fs-1" style="color: var(--blue);"></i>
+                                <span class="ms-3 text-muted">Graphique d'activité</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Activités récentes</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex align-items-center gap-3 border-0 px-0">
+                                    <i class="bi bi-person-add text-success"></i>
+                                    <div>
+                                        <strong>Nouvel utilisateur</strong>
+                                        <div class="small text-muted">Marie Martin - Il y a 5 min</div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex align-items-center gap-3 border-0 px-0">
+                                    <i class="bi bi-shield text-primary"></i>
+                                    <div>
+                                        <strong>Permission modifiée</strong>
+                                        <div class="small text-muted">Rôle Manager - Il y a 2h</div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex align-items-center gap-3 border-0 px-0">
+                                    <i class="bi bi-exclamation-triangle text-warning"></i>
+                                    <div>
+                                        <strong>Alerte configurée</strong>
+                                        <div class="small text-muted">Seuil critique - Il y a 3h</div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex align-items-center gap-3 border-0 px-0">
+                                    <i class="bi bi-database text-info"></i>
+                                    <div>
+                                        <strong>Sauvegarde effectuée</strong>
+                                        <div class="small text-muted">Base de données - Il y a 5h</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Utilisateurs récents -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Derniers utilisateurs inscrits</h5>
+                    <button class="btn btn-blue btn-sm" onclick="document.querySelector('[data-page=\\'users\\']').click()">
+                        Voir tout <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Rôle</th>
+                                    <th>Statut</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width: 35px; height: 35px; font-size: 0.9rem;">MM</div>
+                                            Marie Martin
+                                        </div>
+                                    </td>
+                                    <td>marie.martin@email.com</td>
+                                    <td><span class="badge-role manager">Gestionnaire</span></td>
+                                    <td><span class="badge-status active">Actif</span></td>
+                                    <td>24/02/2024</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width: 35px; height: 35px; font-size: 0.9rem;">PL</div>
+                                            Pierre Lefebvre
+                                        </div>
+                                    </td>
+                                    <td>pierre.lefebvre@email.com</td>
+                                    <td><span class="badge-role manager">Gestionnaire</span></td>
+                                    <td><span class="badge-status inactive">Inactif</span></td>
+                                    <td>23/02/2024</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width: 35px; height: 35px; font-size: 0.9rem;">SB</div>
+                                            Sophie Bernard
+                                        </div>
+                                    </td>
+                                    <td>sophie.bernard@email.com</td>
+                                    <td><span class="badge-role user">Achats</span></td>
+                                    <td><span class="badge-status active">Actif</span></td>
+                                    <td>22/02/2024</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU GESTION DES UTILISATEURS
+    // ================================================
+    function getUsersContent() {
+        let usersTable = '';
+        
+        usersData.forEach(user => {
+            const initials = user.nom.split(' ').map(n => n[0]).join('');
+            const roleClass = user.role === 'admin' ? 'admin' : user.role === 'manager' ? 'manager' : 'user';
+            const roleLabel = user.role === 'admin' ? 'Administrateur' : 
+                             user.role === 'manager' ? 'Gestionnaire' : 
+                             user.role === 'achats' ? 'Achats' : 'Direction';
+            const statusClass = user.status === 'actif' ? 'active' : user.status === 'inactif' ? 'inactive' : 'pending';
+            const statusLabel = user.status === 'actif' ? 'Actif' : user.status === 'inactif' ? 'Inactif' : 'En attente';
+            
+            usersTable += `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="user-avatar" style="width: 35px; height: 35px; font-size: 0.9rem;">${initials}</div>
+                            ${user.nom}
+                        </div>
+                    </td>
+                    <td>${user.email}</td>
+                    <td><span class="badge-role ${roleClass}">${roleLabel}</span></td>
+                    <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
+                    <td>${user.lastLogin}</td>
+                    <td>
+                        <span class="action-btn" onclick="modifierUtilisateur(${user.id})">
+                            <i class="bi bi-pencil"></i>
+                        </span>
+                        <span class="action-btn delete" onclick="supprimerUtilisateur(${user.id})">
+                            <i class="bi bi-trash"></i>
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Liste des utilisateurs</h5>
+                    <button class="btn btn-green" data-bs-toggle="modal" data-bs-target="#userModal">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Ajouter
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Rôle</th>
+                                    <th>Statut</th>
+                                    <th>Dernière connexion</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${usersTable}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6 mb-4 mb-md-0">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Statistiques utilisateurs</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Administrateurs</span>
+                                <span class="fw-bold">2</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Gestionnaires</span>
+                                <span class="fw-bold">2</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Achats</span>
+                                <span class="fw-bold">1</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Direction</span>
+                                <span class="fw-bold">1</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Total actifs</span>
+                                <span class="fw-bold text-success">4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Invitations en attente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center py-4">
+                                <i class="bi bi-envelope fs-1 text-muted"></i>
+                                <p class="mt-3">2 invitations en attente</p>
+                                <button class="btn btn-outline-blue btn-sm">Relancer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU RÔLES ET PERMISSIONS
+    // ================================================
+    function getRolesContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Rôles disponibles</h5>
+                            <button class="btn btn-blue btn-sm">
+                                <i class="bi bi-plus"></i> Nouveau
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-shield-check text-primary me-2"></i>
+                                        Administrateur
+                                    </div>
+                                    <span class="badge-role admin">2</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-shield text-success me-2"></i>
+                                        Gestionnaire
+                                    </div>
+                                    <span class="badge-role manager">2</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-person text-secondary me-2"></i>
+                                        Achats
+                                    </div>
+                                    <span class="badge-role user">1</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-person-badge text-info me-2"></i>
+                                        Direction
+                                    </div>
+                                    <span class="badge-role user">1</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Permissions - Administrateur</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Gérer les utilisateurs
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Configurer les rôles
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Accès à tous les rapports
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Configurer le module prédictif
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Gérer les seuils d'alerte
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Effectuer des sauvegardes
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Consulter le journal
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                        <label class="form-check-label">
+                                            Paramétrer le système
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <h6 class="fw-bold mb-3">Permissions pour Gestionnaire</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                        <label class="form-check-label">Gérer les produits</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                        <label class="form-check-label">Enregistrer mouvements</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox">
+                                        <label class="form-check-label">Configurer alertes</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox">
+                                        <label class="form-check-label">Accès rapports</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-blue mt-3 w-100 w-md-auto">
+                                <i class="bi bi-check-lg me-2"></i>Mettre à jour
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU SEUILS D'ALERTE
+    // ================================================
+    function getSeuilsContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Configuration des seuils</h5>
+                        </div>
+                        <div class="card-body">
+                            <form>
+                                <div class="mb-4">
+                                    <label class="form-label">Seuil de rupture (min)</label>
+                                    <input type="number" class="form-control" value="10">
+                                    <small class="text-muted">En dessous de cette quantité</small>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Seuil de surstock (max)</label>
+                                    <input type="number" class="form-control" value="1000">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Délai réapprovisionnement</label>
+                                    <input type="number" class="form-control" value="7">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Notification par défaut</label>
+                                    <select class="form-select">
+                                        <option>Email</option>
+                                        <option>SMS</option>
+                                        <option>Push</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="btn btn-blue w-100">Sauvegarder</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Alertes actives</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-exclamation-circle text-danger me-2"></i>
+                                        Rupture imminent
+                                    </div>
+                                    <span class="badge bg-danger">3</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                        Seuil critique
+                                    </div>
+                                    <span class="badge bg-warning">8</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-arrow-up-circle text-success me-2"></i>
+                                        Surstock
+                                    </div>
+                                    <span class="badge bg-success">2</span>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <h6 class="fw-bold mb-3">Historique</h6>
+                            <div class="small">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Rupture - Produit A</span>
+                                    <span class="text-muted">Il y a 2h</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Surstock - Produit B</span>
+                                    <span class="text-muted">Il y a 5h</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU MODULE PRÉDICTIF
+    // ================================================
+    function getPredictifContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Configuration de l'IA</h5>
+                        </div>
+                        <div class="card-body">
+                            <form>
+                                <div class="mb-4">
+                                    <label class="form-label">Algorithme</label>
+                                    <select class="form-select">
+                                        <option>Réseau de neurones</option>
+                                        <option>Forêt aléatoire</option>
+                                        <option>Régression linéaire</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Période d'analyse</label>
+                                    <input type="range" class="form-range" min="1" max="24" value="12">
+                                    <div class="d-flex justify-content-between">
+                                        <small>1 mois</small>
+                                        <small>12 mois</small>
+                                        <small>24 mois</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Fréquence</label>
+                                    <select class="form-select">
+                                        <option>Quotidienne</option>
+                                        <option>Hebdomadaire</option>
+                                        <option>Mensuelle</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="btn btn-blue w-100 mb-3">
+                                    <i class="bi bi-cpu me-2"></i>Entraîner
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title">Performances</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <div class="display-1 fw-bold" style="color: var(--blue);">95%</div>
+                                <p class="text-muted">Précision</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Précision</span>
+                                    <span>95%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: 95%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Dernières prédictions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Produit</th>
+                                            <th>Prédiction</th>
+                                            <th>Confiance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Produit A</td>
+                                            <td>+25%</td>
+                                            <td><span class="badge bg-success">98%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Produit B</td>
+                                            <td>-15%</td>
+                                            <td><span class="badge bg-warning">87%</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU RAPPORTS
+    // ================================================
+    function getRapportsContent() {
+        return `
+            <div class="row">
+                <div class="col-sm-6 col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-pdf fs-1 text-danger mb-3"></i>
+                            <h6>Rapport mensuel</h6>
+                            <p class="small text-muted">Février 2024</p>
+                            <button class="btn btn-outline-blue btn-sm w-100">
+                                <i class="bi bi-download me-2"></i>Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-excel fs-1 text-success mb-3"></i>
+                            <h6>Rapport hebdomadaire</h6>
+                            <p class="small text-muted">Semaine 8</p>
+                            <button class="btn btn-outline-blue btn-sm w-100">
+                                <i class="bi bi-download me-2"></i>Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-text fs-1 text-primary mb-3"></i>
+                            <h6>Rapport annuel</h6>
+                            <p class="small text-muted">2023</p>
+                            <button class="btn btn-outline-blue btn-sm w-100">
+                                <i class="bi bi-download me-2"></i>Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Tous les rapports</h5>
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <select class="form-select form-select-sm">
+                            <option>2024</option>
+                            <option>2023</option>
+                        </select>
+                        <button class="btn btn-green btn-sm">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Générer
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Type</th>
+                                    <th>Date</th>
+                                    <th>Taille</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Rapport_activite_2024_02</td>
+                                    <td>PDF</td>
+                                    <td>24/02/2024</td>
+                                    <td>2.3 MB</td>
+                                    <td>
+                                        <i class="bi bi-download text-primary me-2"></i>
+                                        <i class="bi bi-eye text-success"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Analyse_performances_S8</td>
+                                    <td>Excel</td>
+                                    <td>23/02/2024</td>
+                                    <td>1.8 MB</td>
+                                    <td>
+                                        <i class="bi bi-download text-primary me-2"></i>
+                                        <i class="bi bi-eye text-success"></i>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU PARAMÈTRES SYSTÈME
+    // ================================================
+    function getParametresContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Paramètres généraux</h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom entreprise</label>
+                                <input type="text" class="form-control" value="StockPredict Inc.">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email contact</label>
+                                <input type="email" class="form-control" value="contact@stockpredict.com">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Langue</label>
+                                <select class="form-select">
+                                    <option>Français</option>
+                                    <option>Anglais</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fuseau horaire</label>
+                                <select class="form-select">
+                                    <option>Europe/Paris</option>
+                                    <option>UTC</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="fw-bold mb-3">Sécurité</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" checked>
+                                    <label class="form-check-label">2FA</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" checked>
+                                    <label class="form-check-label">Session 30min</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-blue mt-3 w-100 w-md-auto">
+                            <i class="bi bi-save me-2"></i>Sauvegarder
+                        </button>
+                    </form>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU JOURNAL D'ACTIVITÉ
+    // ================================================
+    function getJournalContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Journal d'activité</h5>
+                    <select class="form-select form-select-sm w-auto">
+                        <option>24h</option>
+                        <option>7 jours</option>
+                        <option>30 jours</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="d-flex flex-column flex-sm-row gap-3 mb-4">
+                            <div class="text-center text-sm-start">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-person-add"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <strong>Nouvel utilisateur</strong>
+                                <div class="text-muted small">Marie Martin - Il y a 5 min</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex flex-column flex-sm-row gap-3 mb-4">
+                            <div class="text-center text-sm-start">
+                                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <strong>Permission modifiée</strong>
+                                <div class="text-muted small">Rôle Manager - Il y a 2h</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex flex-column flex-sm-row gap-3">
+                            <div class="text-center text-sm-start">
+                                <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-x-circle"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <strong>Tentative échouée</strong>
+                                <div class="text-muted small">IP: 203.0.113.45 - Il y a 8h</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CONTENU SAUVEGARDES
+    // ================================================
+    function getSauvegardesContent() {
+        return `
+            <div class="row">
+                <div class="col-lg-8 mb-4 mb-lg-0">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Sauvegardes</h5>
+                            <button class="btn btn-blue btn-sm">
+                                <i class="bi bi-cloud-arrow-up me-2"></i>Nouvelle
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Date</th>
+                                            <th>Taille</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>backup_2024_02_24</td>
+                                            <td>24/02/2024</td>
+                                            <td>2.3 GB</td>
+                                            <td><span class="badge bg-success">Auto</span></td>
+                                            <td>
+                                                <i class="bi bi-cloud-download text-primary me-2"></i>
+                                                <i class="bi bi-arrow-repeat text-success"></i>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>backup_manuel</td>
+                                            <td>22/02/2024</td>
+                                            <td>2.1 GB</td>
+                                            <td><span class="badge bg-primary">Manuel</span></td>
+                                            <td>
+                                                <i class="bi bi-cloud-download text-primary me-2"></i>
+                                                <i class="bi bi-arrow-repeat text-success"></i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Fréquence</label>
+                                <select class="form-select">
+                                    <option>Quotidienne</option>
+                                    <option>Hebdomadaire</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Heure</label>
+                                <input type="time" class="form-control" value="03:00">
+                            </div>
+                            
+                            <button class="btn btn-green w-100">Appliquer</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="card-title">Espace utilisé</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div class="display-4 fw-bold" style="color: var(--blue);">6.6 GB</div>
+                                <p class="text-muted">sur 50 GB</p>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 13.2%; background: var(--gradient);">13%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // FONCTIONS UTILITAIRES
+    // ================================================
+    function modifierUtilisateur(id) {
+        alert(`Modification de l'utilisateur ${id}`);
+    }
+
+    function supprimerUtilisateur(id) {
+        if(confirm('Supprimer cet utilisateur ?')) {
+            alert(`Utilisateur ${id} supprimé`);
+        }
+    }
+
+    function ajouterUtilisateur() {
+        alert('Utilisateur créé !');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
+        modal.hide();
+        document.getElementById('addUserForm').reset();
+    }
+
+    // ================================================
+    // INITIALISATION DE LA NAVIGATION
+    // ================================================
+    function initNavigation() {
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const page = this.getAttribute('data-page');
+                
+                if(page === 'logout') {
+                    if(confirm('Déconnexion ?')) {
+                        window.location.href = 'index.html';
+                    }
+                    return;
+                }
+                
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                loadContent(page);
+            });
+        });
+    }
+
+    function initPageEvents() {
+        // Pour d'éventuels événements
+    }
+
+    // ================================================
+    // CHARGEMENT INITIAL
+    // ================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        initNavigation();
+        loadContent('dashboard');
+        
+        // Gestion du redimensionnement
+        window.addEventListener('resize', function() {
+            if(window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                body.classList.remove('sidebar-open');
+            }
+        });
+        
+        console.log('%c👑 Espace Administrateur - Version Responsive', 'color: #2563eb; font-size: 14px; font-weight: bold;');
+    });
+</script>
+
+</body>
+</html>

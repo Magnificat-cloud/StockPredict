@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>StockPredict - Responsable Achats</title>
+    
+    <!-- ==================== BOOTSTRAP PUR ==================== -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- ==================== CSS PERSONNALISÉ ==================== -->
+    <style>
+        /* ===== VARIABLES (MÊMES COULEURS) ===== */
+        :root {
+            --blue: #2563eb;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, var(--blue), var(--green));
+            --gradient-blue: linear-gradient(135deg, #2563eb, #1e40af);
+            --gradient-green: linear-gradient(135deg, #10b981, #059669);
+            --sidebar-width: 280px;
+            --sidebar-width-mobile: 85%;
+            --top-bar-height: 80px;
+        }
+
+        /* ===== STYLES GÉNÉRAUX ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+
+        /* ===== SIDEBAR FIXE AVEC RESPONSIVE ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Sidebar responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width-mobile);
+                max-width: 320px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            body.sidebar-open {
+                overflow: hidden;
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                backdrop-filter: blur(3px);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--gradient);
+            border-radius: 10px;
+        }
+
+        /* En-tête sidebar */
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 2px solid #f1f5f9;
+            background: linear-gradient(135deg, rgba(37,99,235,0.02), rgba(16,185,129,0.02));
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header {
+                padding: 20px 15px;
+            }
+        }
+
+        .sidebar-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .brand-blue {
+            color: var(--blue);
+        }
+
+        .brand-green {
+            color: var(--green);
+        }
+
+        .sidebar-header p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.1));
+            padding: 8px 15px;
+            border-radius: 50px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+            border: 1px solid rgba(37,99,235,0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-badge i {
+            color: var(--blue);
+            margin-right: 8px;
+        }
+
+        /* Menu de navigation */
+        .sidebar-menu {
+            padding: 20px 15px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .nav-item {
+                padding: 10px 15px;
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+
+        .nav-item i {
+            font-size: 1.3rem;
+            width: 25px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(16,185,129,0.05));
+            color: var(--blue);
+            transform: translateX(5px);
+        }
+
+        .nav-item:hover i {
+            color: var(--blue);
+        }
+
+        .nav-item.active {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+        }
+
+        .nav-item.active i {
+            color: white;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            margin: 20px 0;
+        }
+
+        /* ===== TOP BAR RESPONSIVE ===== */
+        .top-bar {
+            margin-left: var(--sidebar-width);
+            padding: 20px 30px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            transition: margin-left 0.3s ease;
+            min-height: var(--top-bar-height);
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                margin-left: 0;
+                padding: 15px 20px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .top-bar {
+                margin-left: 240px;
+                padding: 15px 25px;
+            }
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        .page-title span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .page-title span {
+                display: none;
+            }
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .top-bar-actions {
+                gap: 12px;
+            }
+        }
+
+        .alert-badge {
+            background: var(--red);
+            color: white;
+            border-radius: 50px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+            .alert-badge span:not(.badge) {
+                display: none;
+            }
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: #f1f5f9;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        .user-info {
+            line-height: 1.3;
+        }
+
+        @media (max-width: 768px) {
+            .user-info {
+                display: none;
+            }
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* ===== CONTENU PRINCIPAL RESPONSIVE ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - var(--top-bar-height));
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px 15px;
+                width: 100%;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .main-content {
+                margin-left: 240px;
+                padding: 25px;
+                width: calc(100% - 240px);
+            }
+        }
+
+        /* ===== CARTES STATISTIQUES RESPONSIVES ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                padding: 20px;
+            }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(16,185,129,0.1));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon i {
+            font-size: 1.8rem;
+            color: var(--blue);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-value {
+                font-size: 1.8rem;
+            }
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--green);
+        }
+
+        .stat-change.negative {
+            color: var(--red);
+        }
+
+        /* ===== CARTES PRODUITS CRITIQUES ===== */
+        .critical-card {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-left: 4px solid var(--red);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .critical-card.warning {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left-color: var(--orange);
+        }
+
+        .critical-card .product-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .critical-card .product-name {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .critical-card .product-details {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .critical-card .product-details span {
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+
+        .critical-card .product-details strong {
+            color: var(--dark);
+            margin-left: 5px;
+        }
+
+        .critical-card .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .critical-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .critical-card .actions {
+                width: 100%;
+            }
+            
+            .critical-card .actions button {
+                flex: 1;
+            }
+        }
+
+        /* ===== BOUTONS AVEC COULEURS BLEU/VERT ===== */
+        .btn-primary-custom {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+            color: white;
+        }
+
+        .btn-outline-custom {
+            border: 2px solid var(--blue);
+            color: var(--blue);
+            background: transparent;
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-outline-custom:hover {
+            background: var(--gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        .btn-green {
+            background: var(--green);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-green:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .btn-primary-custom, .btn-outline-custom, .btn-green, .btn-blue {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-primary-custom, .btn-outline-custom, .btn-green, .btn-blue {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        /* ===== TABLEAUX ===== */
+        .card {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: white;
+            border-bottom: 2px solid #f1f5f9;
+            padding: 20px 25px;
+            border-radius: 20px 20px 0 0 !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .card-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 20px;
+            }
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -15px;
+            padding: 0 15px;
+        }
+
+        .table {
+            margin-bottom: 0;
+            min-width: 600px;
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            padding: 15px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        .badge-status {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .badge-status.en-cours {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-status.livre {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-status.retard {
+            background: #fee2e2;
+            color: var(--red);
+        }
+
+        .badge-status.preparation {
+            background: #dbeafe;
+            color: var(--blue);
+        }
+
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+
+        .action-btn:hover {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: var(--red);
+        }
+
+        .action-btn.print:hover {
+            background: var(--green);
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+        }
+
+        .progress-bar {
+            background: var(--gradient);
+            border-radius: 10px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-dialog {
+            margin: 10px;
+            max-width: 500px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-dialog {
+                margin: 5px;
+            }
+            
+            .modal-content {
+                border-radius: 15px;
+            }
+        }
+
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: var(--gradient);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px 25px;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer button {
+                width: 100%;
+                margin: 0;
+            }
+        }
+
+        /* ===== OVERLAY ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            backdrop-filter: blur(3px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ===== LOADING ===== */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f1f5f9;
+            border-top: 5px solid var(--blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== OVERLAY POUR MENU MOBILE ==================== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ==================== SIDEBAR FIXE ==================== -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>
+            <span class="brand-blue">Stock</span><span class="brand-green">Predict</span>
+        </h2>
+        <p>Espace Achats</p>
+        <div class="user-badge">
+            <i class="bi bi-truck"></i>
+            Responsable Achats
+        </div>
+    </div>
+    
+    <div class="sidebar-menu">
+        <!-- Dashboard -->
+        <div class="nav-item active" data-page="dashboard">
+            <i class="bi bi-speedometer2"></i>
+            <span>Tableau de bord</span>
+        </div>
+        
+        <!-- Produits critiques -->
+        <div class="nav-item" data-page="critiques">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>Produits critiques</span>
+            <span class="badge bg-danger">6</span>
+        </div>
+        
+        <!-- Commander -->
+        <div class="nav-item" data-page="commander">
+            <i class="bi bi-cart-plus"></i>
+            <span>Nouvelle commande</span>
+        </div>
+        
+        <!-- Historique commandes -->
+        <div class="nav-item" data-page="historique">
+            <i class="bi bi-clock-history"></i>
+            <span>Historique commandes</span>
+        </div>
+        
+        <!-- Suivi livraisons -->
+        <div class="nav-item" data-page="suivi">
+            <i class="bi bi-truck"></i>
+            <span>Suivi livraisons</span>
+            <span class="badge bg-success">3</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Fournisseurs -->
+        <div class="nav-item" data-page="fournisseurs">
+            <i class="bi bi-building"></i>
+            <span>Fournisseurs</span>
+        </div>
+        
+        <!-- Catalogue -->
+        <div class="nav-item" data-page="catalogue">
+            <i class="bi bi-book"></i>
+            <span>Catalogue produits</span>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Déconnexion -->
+        <div class="nav-item" data-page="logout">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Déconnexion</span>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TOP BAR ==================== -->
+<div class="top-bar">
+    <div class="page-title">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <span id="pageTitle">Tableau de bord</span>
+        <span>Achats</span>
+    </div>
+    
+    <div class="top-bar-actions">
+        <!-- Alertes -->
+        <div class="alert-badge">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>6 produits critiques</span>
+        </div>
+        
+        <!-- Profil -->
+        <div class="user-profile">
+            <div class="user-avatar">
+                RA
+            </div>
+            <div class="user-info">
+                <div class="user-name">Responsable Achats</div>
+                <div class="user-role">Gestion des commandes</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CONTENU PRINCIPAL ==================== -->
+<div class="main-content" id="mainContent">
+    <!-- Le contenu sera chargé dynamiquement -->
+    <div class="loading">
+        <div class="loading-spinner"></div>
+    </div>
+</div>
+
+<!-- ==================== MODAL NOUVELLE COMMANDE ==================== -->
+<div class="modal fade" id="commandeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-cart-plus me-2"></i>
+                    Nouvelle commande
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="commandeForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fournisseur</label>
+                            <select class="form-select" required>
+                                <option value="">Sélectionner</option>
+                                <option>HP France</option>
+                                <option>Dell Technology</option>
+                                <option>Logitech SA</option>
+                                <option>IKEA Pro</option>
+                                <option>Sony France</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date livraison souhaitée</label>
+                            <input type="date" class="form-control" value="2024-03-15">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Produit</label>
+                        <select class="form-select" id="produitSelect">
+                            <option value="">Sélectionner un produit</option>
+                            <option value="1" data-stock="3">Clavier sans fil (Stock: 3 - Seuil: 10)</option>
+                            <option value="2" data-stock="5">Chaise de bureau (Stock: 5 - Seuil: 5)</option>
+                            <option value="3" data-stock="8">Écran 24 pouces (Stock: 8 - Seuil: 10)</option>
+                            <option value="4" data-stock="2">Casque audio (Stock: 2 - Seuil: 8)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Quantité recommandée</label>
+                            <input type="number" class="form-control" id="quantiteRecommandee" value="15" readonly>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Quantité à commander</label>
+                            <input type="number" class="form-control" value="15" min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Prix unitaire (€)</label>
+                        <input type="number" class="form-control" value="25.00" step="0.01">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" rows="2" placeholder="Instructions spéciales..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary-custom" onclick="genererBonCommande()">
+                    <i class="bi bi-file-pdf me-2"></i>Générer bon de commande
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== BOOTSTRAP JS ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ==================== JAVASCRIPT PUR ==================== -->
+<script>
+    // ================================================
+    // DONNÉES DE DÉMONSTRATION
+    // ================================================
+    
+    // Produits en stock
+    const produits = [
+        { id: 1, nom: 'Clavier sans fil', categorie: 'Périphériques', stock: 3, seuil: 10, recommandation: 15, fournisseur: 'Logitech SA', prix: 25.00 },
+        { id: 2, nom: 'Chaise de bureau', categorie: 'Mobilier', stock: 5, seuil: 5, recommandation: 10, fournisseur: 'IKEA Pro', prix: 120.00 },
+        { id: 3, nom: 'Écran 24 pouces', categorie: 'Informatique', stock: 8, seuil: 10, recommandation: 8, fournisseur: 'Dell Technology', prix: 180.00 },
+        { id: 4, nom: 'Casque audio', categorie: 'Audio', stock: 2, seuil: 8, recommandation: 12, fournisseur: 'Sony France', prix: 59.00 },
+        { id: 5, nom: 'Souris optique', categorie: 'Périphériques', stock: 12, seuil: 15, recommandation: 5, fournisseur: 'Logitech SA', prix: 29.00 },
+        { id: 6, nom: 'Ordinateur portable', categorie: 'Informatique', stock: 4, seuil: 10, recommandation: 10, fournisseur: 'HP France', prix: 650.00 }
+    ];
+
+    // Commandes existantes
+    const commandes = [
+        { id: 'CMD-2024-001', date: '24/02/2024', fournisseur: 'Logitech SA', produits: 'Claviers, Souris', total: 1250.00, statut: 'en-cours' },
+        { id: 'CMD-2024-002', date: '23/02/2024', fournisseur: 'Dell Technology', produits: 'Écrans', total: 2880.00, statut: 'livre' },
+        { id: 'CMD-2024-003', date: '22/02/2024', fournisseur: 'HP France', produits: 'Ordinateurs', total: 6500.00, statut: 'retard' },
+        { id: 'CMD-2024-004', date: '21/02/2024', fournisseur: 'IKEA Pro', produits: 'Chaises', total: 2400.00, statut: 'preparation' }
+    ];
+
+    // Livraisons
+    const livraisons = [
+        { id: 'LIV-2024-001', commande: 'CMD-2024-001', fournisseur: 'Logitech SA', datePrev: '25/02/2024', statut: 'en-cours', progression: 75 },
+        { id: 'LIV-2024-002', commande: 'CMD-2024-002', fournisseur: 'Dell Technology', datePrev: '26/02/2024', statut: 'preparation', progression: 30 },
+        { id: 'LIV-2024-003', commande: 'CMD-2024-003', fournisseur: 'HP France', datePrev: '20/02/2024', statut: 'retard', progression: 90 }
+    ];
+
+    // Fournisseurs
+    const fournisseurs = [
+        { id: 1, nom: 'HP France', email: 'commandes@hp.fr', telephone: '01 23 45 67 89', delai: 3, note: 4.5 },
+        { id: 2, nom: 'Dell Technology', email: 'ventes@dell.fr', telephone: '01 23 45 67 90', delai: 4, note: 4.8 },
+        { id: 3, nom: 'Logitech SA', email: 'pro@logitech.fr', telephone: '01 23 45 67 91', delai: 2, note: 4.2 },
+        { id: 4, nom: 'IKEA Pro', email: 'pro@ikea.fr', telephone: '01 23 45 67 92', delai: 5, note: 4.0 }
+    ];
+
+    // ================================================
+    // GESTION DU MENU MOBILE
+    // ================================================
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const body = document.body;
+
+    function toggleMenu() {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+        body.classList.toggle('sidebar-open');
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleMenu();
+            }
+        });
+    });
+
+    // ================================================
+    // FONCTION DE CHARGEMENT DU CONTENU
+    // ================================================
+    function loadContent(page) {
+        const mainContent = document.getElementById('mainContent');
+        const pageTitle = document.getElementById('pageTitle');
+        let content = '';
+
+        mainContent.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            switch(page) {
+                case 'dashboard':
+                    pageTitle.textContent = 'Tableau de bord';
+                    content = getDashboardContent();
+                    break;
+                case 'critiques':
+                    pageTitle.textContent = 'Produits critiques';
+                    content = getCritiquesContent();
+                    break;
+                case 'commander':
+                    pageTitle.textContent = 'Nouvelle commande';
+                    content = getCommanderContent();
+                    break;
+                case 'historique':
+                    pageTitle.textContent = 'Historique commandes';
+                    content = getHistoriqueContent();
+                    break;
+                case 'suivi':
+                    pageTitle.textContent = 'Suivi livraisons';
+                    content = getSuiviContent();
+                    break;
+                case 'fournisseurs':
+                    pageTitle.textContent = 'Fournisseurs';
+                    content = getFournisseursContent();
+                    break;
+                case 'catalogue':
+                    pageTitle.textContent = 'Catalogue produits';
+                    content = getCatalogueContent();
+                    break;
+                default:
+                    content = '<div class="alert alert-info">Page en construction</div>';
+            }
+            
+            mainContent.innerHTML = content;
+        }, 300);
+    }
+
+    // ================================================
+    // TABLEAU DE BORD
+    // ================================================
+    function getDashboardContent() {
+        const produitsCritiques = produits.filter(p => p.stock <= p.seuil);
+        const totalCommandes = commandes.length;
+        const livraisonsAttente = livraisons.filter(l => l.statut !== 'livre').length;
+        const montantTotal = commandes.reduce((acc, c) => acc + c.total, 0);
+
+        return `
+            <!-- Statistiques -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Produits critiques</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value text-danger">${produitsCritiques.length}</div>
+                    <div class="stat-change negative">
+                        <i class="bi bi-arrow-up"></i>
+                        <span>+2 cette semaine</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Commandes en cours</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-cart"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${totalCommandes}</div>
+                    <div class="stat-change positive">
+                        <i class="bi bi-check-circle"></i>
+                        <span>3 en attente</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Livraisons</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${livraisonsAttente}</div>
+                    <div class="stat-change negative">
+                        <i class="bi bi-clock"></i>
+                        <span>1 en retard</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Montant total</span>
+                        <div class="stat-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${montantTotal}€</div>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i>
+                        <span>+15% ce mois</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Produits critiques -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Produits nécessitant réapprovisionnement</h5>
+                    <button class="btn btn-primary-custom btn-sm" onclick="document.querySelector('[data-page=\\'commander\\']').click()">
+                        <i class="bi bi-plus-circle me-2"></i>Nouvelle commande
+                    </button>
+                </div>
+                <div class="card-body">
+                    ${produitsCritiques.map(p => {
+                        const type = p.stock === 0 ? 'critical' : (p.stock <= p.seuil/2 ? 'critical' : 'warning');
+                        return `
+                            <div class="critical-card ${type === 'critical' ? '' : 'warning'}">
+                                <div class="product-info">
+                                    <div class="product-name">${p.nom}</div>
+                                    <div class="product-details">
+                                        <span>Stock: <strong class="${p.stock === 0 ? 'text-danger' : ''}">${p.stock}</strong></span>
+                                        <span>Seuil: <strong>${p.seuil}</strong></span>
+                                        <span>Recommandé: <strong class="text-success">${p.recommandation}</strong></span>
+                                    </div>
+                                </div>
+                                <div class="actions">
+                                    <button class="btn btn-primary-custom btn-sm" onclick="ouvrirCommande(${p.id})">
+                                        <i class="bi bi-cart-plus me-2"></i>Commander
+                                    </button>
+                                    <button class="btn btn-outline-custom btn-sm" onclick="voirDetails(${p.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- Dernières commandes -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Dernières commandes</h5>
+                    <button class="btn btn-outline-custom btn-sm" onclick="document.querySelector('[data-page=\\'historique\\']').click()">
+                        Voir tout
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>N° Commande</th>
+                                    <th>Date</th>
+                                    <th>Fournisseur</th>
+                                    <th>Total</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${commandes.slice(0, 3).map(c => `
+                                    <tr>
+                                        <td><strong>${c.id}</strong></td>
+                                        <td>${c.date}</td>
+                                        <td>${c.fournisseur}</td>
+                                        <td>${c.total} €</td>
+                                        <td>
+                                            <span class="badge-status ${c.statut}">
+                                                ${c.statut === 'en-cours' ? 'En cours' : 
+                                                  c.statut === 'livre' ? 'Livré' : 
+                                                  c.statut === 'retard' ? 'Retard' : 'Préparation'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="action-btn" onclick="voirCommande('${c.id}')">
+                                                <i class="bi bi-eye"></i>
+                                            </span>
+                                            <span class="action-btn print" onclick="imprimerCommande('${c.id}')">
+                                                <i class="bi bi-printer"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Livraisons à suivre -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Livraisons à suivre</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Livraison</th>
+                                    <th>Fournisseur</th>
+                                    <th>Date prévue</th>
+                                    <th>Progression</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${livraisons.map(l => `
+                                    <tr>
+                                        <td>${l.id}</td>
+                                        <td>${l.fournisseur}</td>
+                                        <td>${l.datePrev}</td>
+                                        <td style="min-width: 150px;">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1">
+                                                    <div class="progress-bar" style="width: ${l.progression}%"></div>
+                                                </div>
+                                                <span>${l.progression}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-status ${l.statut}">
+                                                ${l.statut === 'en-cours' ? 'En cours' : 
+                                                  l.statut === 'preparation' ? 'Préparation' : 'Retard'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="action-btn" onclick="suivreLivraison('${l.id}')">
+                                                <i class="bi bi-truck"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // PRODUITS CRITIQUES
+    // ================================================
+    function getCritiquesContent() {
+        const produitsCritiques = produits.filter(p => p.stock <= p.seuil);
+        
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Produits en seuil critique</h5>
+                    <span class="badge bg-danger">${produitsCritiques.length} produits</span>
+                </div>
+                <div class="card-body">
+                    ${produitsCritiques.map(p => {
+                        const urgence = p.stock === 0 ? 'URGENT' : (p.stock <= p.seuil/2 ? 'Critique' : 'À surveiller');
+                        const bgClass = p.stock === 0 ? 'bg-danger' : (p.stock <= p.seuil/2 ? 'bg-warning' : 'bg-info');
+                        
+                        return `
+                            <div class="critical-card ${p.stock === 0 ? '' : 'warning'}">
+                                <div class="product-info">
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                        <div>
+                                            <div class="product-name">${p.nom}</div>
+                                            <div class="text-muted small">${p.categorie} • Fournisseur: ${p.fournisseur}</div>
+                                        </div>
+                                        <span class="badge ${bgClass} text-white">${urgence}</span>
+                                    </div>
+                                    <div class="product-details mt-3">
+                                        <span>Stock actuel: <strong class="${p.stock === 0 ? 'text-danger' : ''}">${p.stock}</strong></span>
+                                        <span>Seuil d'alerte: <strong>${p.seuil}</strong></span>
+                                        <span>Manque: <strong class="text-danger">${p.seuil - p.stock}</strong></span>
+                                        <span>Recommandation: <strong class="text-success">${p.recommandation}</strong></span>
+                                    </div>
+                                </div>
+                                <div class="actions">
+                                    <button class="btn btn-primary-custom" onclick="ouvrirCommande(${p.id})">
+                                        <i class="bi bi-cart-plus me-2"></i>Commander
+                                    </button>
+                                    <button class="btn btn-outline-custom" onclick="voirDetails(${p.id})">
+                                        <i class="bi bi-graph-up me-2"></i>Prévisions
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // NOUVELLE COMMANDE
+    // ================================================
+    function getCommanderContent() {
+        const produitsCritiques = produits.filter(p => p.stock <= p.seuil);
+        
+        return `
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Sélectionner les produits</h5>
+                        </div>
+                        <div class="card-body">
+                            <form>
+                                <div class="mb-4">
+                                    <label class="form-label">Fournisseur</label>
+                                    <select class="form-select" id="fournisseurSelect">
+                                        <option value="">Tous les fournisseurs</option>
+                                        <option>HP France</option>
+                                        <option>Dell Technology</option>
+                                        <option>Logitech SA</option>
+                                        <option>IKEA Pro</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Sélection</th>
+                                                <th>Produit</th>
+                                                <th>Stock</th>
+                                                <th>Recommandé</th>
+                                                <th>Quantité</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${produitsCritiques.map(p => `
+                                                <tr>
+                                                    <td>
+                                                        <input class="form-check-input" type="checkbox" value="${p.id}" id="prod${p.id}">
+                                                    </td>
+                                                    <td>
+                                                        <strong>${p.nom}</strong>
+                                                        <br><small class="text-muted">${p.fournisseur}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-danger">${p.stock}</span>
+                                                        <small class="text-muted">/ seuil ${p.seuil}</small>
+                                                    </td>
+                                                    <td><span class="badge bg-success">${p.recommandation}</span></td>
+                                                    <td>
+                                                        <input type="number" class="form-control form-control-sm" value="${p.recommandation}" min="1" style="width: 80px;">
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <label class="form-label">Date livraison souhaitée</label>
+                                    <input type="date" class="form-control" value="2024-03-15">
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-control" rows="2"></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="card-footer bg-white border-0 pb-4">
+                            <button class="btn btn-primary-custom" onclick="genererBonCommande()">
+                                <i class="bi bi-file-pdf me-2"></i>Générer bon de commande
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Récapitulatif</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <span>Produits sélectionnés</span>
+                                <h3 class="text-primary">${produitsCritiques.length}</h3>
+                            </div>
+                            <div class="mb-3">
+                                <span>Quantité totale recommandée</span>
+                                <h3 class="text-success">${produitsCritiques.reduce((acc, p) => acc + p.recommandation, 0)}</h3>
+                            </div>
+                            <div class="mb-3">
+                                <span>Fournisseurs concernés</span>
+                                <h3>${new Set(produitsCritiques.map(p => p.fournisseur)).size}</h3>
+                            </div>
+                            <hr>
+                            <div>
+                                <span>Estimation totale</span>
+                                <h3 class="text-primary">${produitsCritiques.reduce((acc, p) => acc + (p.recommandation * p.prix), 0)} €</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // HISTORIQUE DES COMMANDES
+    // ================================================
+    function getHistoriqueContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Historique des commandes</h5>
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <select class="form-select form-select-sm w-auto">
+                            <option>Tous les fournisseurs</option>
+                            <option>HP France</option>
+                            <option>Dell Technology</option>
+                            <option>Logitech SA</option>
+                        </select>
+                        <select class="form-select form-select-sm w-auto">
+                            <option>Tous les statuts</option>
+                            <option>En cours</option>
+                            <option>Livré</option>
+                            <option>Retard</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>N° Commande</th>
+                                    <th>Date</th>
+                                    <th>Fournisseur</th>
+                                    <th>Produits</th>
+                                    <th>Total</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${commandes.map(c => `
+                                    <tr>
+                                        <td><strong>${c.id}</strong></td>
+                                        <td>${c.date}</td>
+                                        <td>${c.fournisseur}</td>
+                                        <td>${c.produits}</td>
+                                        <td>${c.total} €</td>
+                                        <td>
+                                            <span class="badge-status ${c.statut}">
+                                                ${c.statut === 'en-cours' ? 'En cours' : 
+                                                  c.statut === 'livre' ? 'Livré' : 
+                                                  c.statut === 'retard' ? 'Retard' : 'Préparation'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="action-btn" onclick="voirCommande('${c.id}')">
+                                                <i class="bi bi-eye"></i>
+                                            </span>
+                                            <span class="action-btn print" onclick="imprimerCommande('${c.id}')">
+                                                <i class="bi bi-printer"></i>
+                                            </span>
+                                            <span class="action-btn" onclick="dupliquerCommande('${c.id}')">
+                                                <i class="bi bi-files"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // SUIVI LIVRAISONS
+    // ================================================
+    function getSuiviContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Suivi des livraisons</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Livraison</th>
+                                    <th>Commande</th>
+                                    <th>Fournisseur</th>
+                                    <th>Date prévue</th>
+                                    <th>Progression</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${livraisons.map(l => `
+                                    <tr>
+                                        <td><strong>${l.id}</strong></td>
+                                        <td>${l.commande}</td>
+                                        <td>${l.fournisseur}</td>
+                                        <td>${l.datePrev}</td>
+                                        <td style="min-width: 200px;">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1">
+                                                    <div class="progress-bar" style="width: ${l.progression}%"></div>
+                                                </div>
+                                                <span class="fw-bold">${l.progression}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-status ${l.statut}">
+                                                ${l.statut === 'en-cours' ? 'En cours' : 
+                                                  l.statut === 'preparation' ? 'Préparation' : 'Retard'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="action-btn" onclick="suivreLivraison('${l.id}')">
+                                                <i class="bi bi-truck"></i>
+                                            </span>
+                                            <span class="action-btn" onclick="contacterFournisseur('${l.fournisseur}')">
+                                                <i class="bi bi-envelope"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Calendrier des livraisons</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded-3 p-3 text-center">
+                                <h6>Aujourd'hui</h6>
+                                <h3 class="text-success">2</h3>
+                                <small class="text-muted">livraisons prévues</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded-3 p-3 text-center">
+                                <h6>Cette semaine</h6>
+                                <h3 class="text-primary">5</h3>
+                                <small class="text-muted">livraisons</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded-3 p-3 text-center">
+                                <h6>En retard</h6>
+                                <h3 class="text-danger">1</h3>
+                                <small class="text-muted">livraison</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // FOURNISSEURS
+    // ================================================
+    function getFournisseursContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Gestion des fournisseurs</h5>
+                    <button class="btn btn-primary-custom btn-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Nouveau fournisseur
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Fournisseur</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Délai (jours)</th>
+                                    <th>Note</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${fournisseurs.map(f => `
+                                    <tr>
+                                        <td><strong>${f.nom}</strong></td>
+                                        <td>${f.email}</td>
+                                        <td>${f.telephone}</td>
+                                        <td>${f.delai} jours</td>
+                                        <td>
+                                            ${Array(5).fill().map((_, i) => 
+                                                i < Math.floor(f.note) 
+                                                    ? '<i class="bi bi-star-fill text-warning"></i>' 
+                                                    : (i < f.note ? '<i class="bi bi-star-half text-warning"></i>' : '<i class="bi bi-star text-muted"></i>')
+                                            ).join('')}
+                                        </td>
+                                        <td>
+                                            <span class="action-btn" onclick="voirFournisseur(${f.id})">
+                                                <i class="bi bi-eye"></i>
+                                            </span>
+                                            <span class="action-btn" onclick="commanderFournisseur(${f.id})">
+                                                <i class="bi bi-cart-plus"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // CATALOGUE PRODUITS
+    // ================================================
+    function getCatalogueContent() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Catalogue produits</h5>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm" placeholder="Rechercher...">
+                        <select class="form-select form-select-sm w-auto">
+                            <option>Tous</option>
+                            <option>Informatique</option>
+                            <option>Périphériques</option>
+                            <option>Mobilier</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Catégorie</th>
+                                    <th>Fournisseur</th>
+                                    <th>Prix</th>
+                                    <th>Stock</th>
+                                    <th>Seuil</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${produits.map(p => `
+                                    <tr>
+                                        <td><strong>${p.nom}</strong></td>
+                                        <td>${p.categorie}</td>
+                                        <td>${p.fournisseur}</td>
+                                        <td>${p.prix} €</td>
+                                        <td>
+                                            <span class="badge ${p.stock <= p.seuil ? 'bg-danger' : 'bg-success'}">${p.stock}</span>
+                                        </td>
+                                        <td>${p.seuil}</td>
+                                        <td>
+                                            <span class="action-btn" onclick="ouvrirCommande(${p.id})">
+                                                <i class="bi bi-cart-plus"></i>
+                                            </span>
+                                            <span class="action-btn" onclick="voirDetails(${p.id})">
+                                                <i class="bi bi-graph-up"></i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ================================================
+    // FONCTIONS UTILITAIRES
+    // ================================================
+    function ouvrirCommande(id) {
+        const produit = produits.find(p => p.id === id);
+        document.getElementById('produitSelect').value = id;
+        document.getElementById('quantiteRecommandee').value = produit.recommandation;
+        
+        const modal = new bootstrap.Modal(document.getElementById('commandeModal'));
+        modal.show();
+    }
+
+    function genererBonCommande() {
+        alert('Bon de commande généré avec succès !');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('commandeModal'));
+        if(modal) modal.hide();
+    }
+
+    function voirDetails(id) {
+        alert(`Détails du produit ${id}`);
+    }
+
+    function voirCommande(id) {
+        alert(`Détails de la commande ${id}`);
+    }
+
+    function imprimerCommande(id) {
+        alert(`Impression de la commande ${id}`);
+    }
+
+    function dupliquerCommande(id) {
+        alert(`Commande ${id} dupliquée`);
+    }
+
+    function suivreLivraison(id) {
+        alert(`Suivi de la livraison ${id}`);
+    }
+
+    function contacterFournisseur(nom) {
+        alert(`Contact avec ${nom}`);
+    }
+
+    function voirFournisseur(id) {
+        alert(`Détails fournisseur ${id}`);
+    }
+
+    function commanderFournisseur(id) {
+        alert(`Commande au fournisseur ${id}`);
+    }
+
+    // ================================================
+    // INITIALISATION
+    // ================================================
+    function initNavigation() {
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const page = this.getAttribute('data-page');
+                
+                if(page === 'logout') {
+                    if(confirm('Déconnexion ?')) {
+                        window.location.href = 'index.html';
+                    }
+                    return;
+                }
+                
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                loadContent(page);
+            });
+        });
+    }
+
+    window.addEventListener('resize', function() {
+        if(window.innerWidth > 768) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            body.classList.remove('sidebar-open');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initNavigation();
+        loadContent('dashboard');
+        console.log('%c📦 Espace Responsable Achats - Version Responsive', 'color: #2563eb; font-size: 14px; font-weight: bold;');
+    });
+</script>
+
+</body>
+</html>
